@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Star, Quote } from "lucide-react";
+import { Star, Quote, User, CircleDot, ShoppingBag, Flower2, Sparkles } from "lucide-react";
 
 const TESTIMONIALS = [
   {
@@ -7,8 +7,9 @@ const TESTIMONIALS = [
     name: "Aarohi Patel",
     role: "Fashion Enthusiast",
     text: "The handmade bangles are absolutely beautiful and premium. The detailing, colors, and finishing are even better in real life. Everyone keeps asking where I bought them from!",
-    avatar: "👩",
-    image: "💚",
+    avatarColor: "bg-[#6B8E7F]",
+    productIcon: <CircleDot size={32} className="text-[#6B8E7F]" />,
+    productBg: "bg-[#6B8E7F]/10",
     rating: 5,
   },
   {
@@ -16,8 +17,9 @@ const TESTIMONIALS = [
     name: "Priya Sharma",
     role: "Bride To Be",
     text: "I ordered bridal bangles and a mirror work blouse for my wedding functions. The craftsmanship was stunning and perfectly matched my outfits. Truly handmade elegance!",
-    avatar: "👰",
-    image: "✨",
+    avatarColor: "bg-[#9D6B7F]",
+    productIcon: <Sparkles size={32} className="text-[#9D6B7F]" />,
+    productBg: "bg-[#9D6B7F]/10",
     rating: 5,
   },
   {
@@ -25,8 +27,9 @@ const TESTIMONIALS = [
     name: "Neha Joshi",
     role: "Regular Customer",
     text: "The saree pins and handmade purses are so unique and classy. The quality is amazing and the products feel very premium. Loved every detail of the packaging too.",
-    avatar: "👩‍🦰",
-    image: "👜",
+    avatarColor: "bg-[#C97C5D]",
+    productIcon: <ShoppingBag size={32} className="text-[#C97C5D]" />,
+    productBg: "bg-[#C97C5D]/10",
     rating: 5,
   },
   {
@@ -34,8 +37,9 @@ const TESTIMONIALS = [
     name: "Riya Mehta",
     role: "Ethnic Wear Creator",
     text: "Beautiful handcrafted products with a traditional touch. The embroidery work and handmade accessories are elegant, creative, and perfect for festive occasions.",
-    avatar: "👩‍🎨",
-    image: "🌸",
+    avatarColor: "bg-[#D4A373]",
+    productIcon: <Flower2 size={32} className="text-[#D4A373]" />,
+    productBg: "bg-[#D4A373]/10",
     rating: 5,
   },
 ];
@@ -57,8 +61,9 @@ export default function TestimonialSection() {
           viewport={{ once: true }}
           className="text-center mb-20"
         >
-          <span className="inline-block text-sm tracking-[5px] uppercase text-[#6B8E7F] mb-4 font-medium">
-            ✿ Customer Reviews
+          <span className="inline-flex items-center gap-2 text-sm tracking-[5px] uppercase text-[#6B8E7F] mb-4 font-medium">
+            <Star size={14} className="text-[#6B8E7F] fill-[#6B8E7F]" />
+            Customer Reviews
           </span>
 
           <h2 className="font-serif text-4xl sm:text-5xl lg:text-6xl text-[#3A3A3A] mb-6 leading-tight">
@@ -94,9 +99,9 @@ export default function TestimonialSection() {
                 <Quote size={50} className="text-[#6B8E7F]" />
               </div>
 
-              {/* Top Emoji */}
-              <div className="text-5xl mb-6">
-                {testimonial.image}
+              {/* Product Icon */}
+              <div className={`w-14 h-14 rounded-2xl ${testimonial.productBg} flex items-center justify-center mb-6`}>
+                {testimonial.productIcon}
               </div>
 
               {/* Stars */}
@@ -117,8 +122,8 @@ export default function TestimonialSection() {
 
               {/* User Info */}
               <div className="flex items-center gap-4 pt-6 border-t border-[#EFE7DD]">
-                <div className="w-14 h-14 rounded-full bg-[#F5F1E8] flex items-center justify-center text-3xl shadow-sm">
-                  {testimonial.avatar}
+                <div className={`w-14 h-14 rounded-full ${testimonial.avatarColor} flex items-center justify-center shadow-sm`}>
+                  <User size={24} className="text-white" />
                 </div>
 
                 <div>
@@ -144,10 +149,11 @@ export default function TestimonialSection() {
           className="grid grid-cols-1 sm:grid-cols-3 gap-8 mt-24 pt-16 border-t border-[#E8DDD0]"
         >
           <div className="text-center bg-white rounded-[28px] py-10 shadow-md border border-[#EFE7DD]">
-            <div className="text-5xl font-serif text-[#6B8E7F] mb-3">
-              5★
+            <div className="flex items-center justify-center gap-1 mb-3">
+              {[...Array(5)].map((_, i) => (
+                <Star key={i} size={22} className="fill-[#6B8E7F] text-[#6B8E7F]" />
+              ))}
             </div>
-
             <p className="text-[#5A5A5A] text-lg">
               Average Rating
             </p>

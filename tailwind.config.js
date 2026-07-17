@@ -20,7 +20,7 @@ export default {
         soft: '#2B2B2B',
       },
       fontFamily: {
-        serif: ['"Playfair Display"', 'Georgia', 'serif'],
+        serif: ['"Playfair Display"', '"Noto Serif Devanagari"', 'Georgia', 'serif'],
         sans: ['Poppins', 'Inter', 'sans-serif'],
       },
       borderRadius: {

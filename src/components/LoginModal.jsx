@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Mail, Lock, User, Eye, EyeOff, Sparkles } from 'lucide-react';
+import { X, Mail, Lock, User, Eye, EyeOff, Sparkles, Heart, Globe } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
 
 export default function LoginModal() {
@@ -43,8 +43,12 @@ export default function LoginModal() {
                   <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-3">
                     <Sparkles size={24} className="text-white" />
                   </div>
-                  <h2 className="font-serif text-2xl font-bold text-white mb-1">
-                    {tab === 'login' ? 'Welcome Back! ✨' : 'Join Our Family 💕'}
+                  <h2 className="font-serif text-2xl font-bold text-white mb-1 flex items-center justify-center gap-2">
+                    {tab === 'login' ? (
+                      <><Sparkles size={20} /> Welcome Back!</>
+                    ) : (
+                      <><Heart size={20} className="fill-white" /> Join Our Family</>
+                    )}
                   </h2>
                   <p className="font-sans text-sm text-white/80">
                     {tab === 'login' ? 'Sign in to your account' : 'Create your handmade account'}
@@ -126,7 +130,11 @@ export default function LoginModal() {
                   type="submit"
                   className="w-full bg-gradient-to-r from-[#C97C5D] to-[#D8A7B1] text-white py-4 rounded-2xl font-sans font-semibold shadow-card hover:shadow-hover hover:-translate-y-0.5 transition-all"
                 >
-                  {tab === 'login' ? 'Sign In ✨' : 'Create Account 💕'}
+                  {tab === 'login' ? (
+                    <span className="flex items-center justify-center gap-2"><Sparkles size={16} /> Sign In</span>
+                  ) : (
+                    <span className="flex items-center justify-center gap-2"><Heart size={16} className="fill-white" /> Create Account</span>
+                  )}
                 </button>
 
                 {/* Divider */}
@@ -141,7 +149,9 @@ export default function LoginModal() {
                   type="button"
                   className="w-full border-2 border-[#F5E6DA] text-[#3E2C23] py-3.5 rounded-2xl font-sans text-sm font-medium flex items-center justify-center gap-3 hover:border-[#D8A7B1] hover:bg-[#FFF0F5] transition-all"
                 >
-                  <span className="text-lg">🌐</span>
+                  <div className="w-5 h-5 flex items-center justify-center">
+                    <Globe size={18} className="text-[#6B8E7F]" />
+                  </div>
                   Continue with Google
                 </button>
               </form>

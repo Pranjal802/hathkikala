@@ -72,8 +72,9 @@ export default function GallerySection() {
           viewport={{ once: true }}
           className="text-center mb-20"
         >
-          <span className="inline-block text-sm tracking-[5px] uppercase text-[#6B8E7F] mb-4 font-medium">
-            ✿ Handmade Gallery
+          <span className="inline-flex items-center gap-2 text-sm tracking-[5px] uppercase text-[#6B8E7F] mb-4 font-medium">
+            <Camera size={14} className="text-[#6B8E7F]" />
+            Handmade Gallery
           </span>
 
           <h2 className="font-serif text-4xl sm:text-5xl lg:text-6xl text-[#3A3A3A] mb-6 leading-tight">

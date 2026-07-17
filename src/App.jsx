@@ -7,10 +7,12 @@ import TestimonialsSection from './components/TestimonialsSection.jsx'
 import NewsletterSection from './components/NewsletterSection.jsx'
 import Footer from './components/Footer.jsx'
 import AboutUs from './components/AboutUs.jsx'
+import WelcomePopup from './components/WelcomePopup.jsx'
 
 function App() {
   return (
     <div className="bg-white">
+      <WelcomePopup />
       <Navbar />
       <HeroSection />
       <CategoriesSection />

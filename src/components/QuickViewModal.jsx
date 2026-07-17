@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Star, Heart, ShoppingCart, Share2, Check } from 'lucide-react';
+import { X, Star, Heart, ShoppingCart, Share2, Check, HandHeart, ShoppingBag } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
 import { useState } from 'react';
 
@@ -48,14 +48,13 @@ export default function QuickViewModal() {
               </button>
 
               <div className="grid md:grid-cols-2">
-                {/* Image */}
                 <div className="bg-gradient-to-br from-[#F5E6DA] to-[#FDEEE4] flex items-center justify-center p-12 min-h-64">
                   <motion.div
                     animate={{ y: [0, -12, 0] }}
                     transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}
-                    className="text-9xl select-none"
+                    className="w-36 h-36 bg-white/60 backdrop-blur-sm rounded-3xl flex items-center justify-center shadow-lg"
                   >
-                    {product.emoji}
+                    <ShoppingBag size={64} className="text-[#C97C5D]/60" />
                   </motion.div>
                 </div>
 
@@ -177,7 +176,7 @@ export default function QuickViewModal() {
 
                   {/* Trust badge */}
                   <div className="flex items-center gap-2 mt-5 bg-[#F5E6DA]/60 rounded-xl px-3 py-2">
-                    <span className="text-base">🤲</span>
+                    <HandHeart size={18} className="text-[#C97C5D] flex-shrink-0" />
                     <span className="font-sans text-xs text-[#5C4033]/70">
                       100% Handmade · Crafted with Love · Premium Materials
                     </span>

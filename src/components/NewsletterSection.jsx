@@ -36,8 +36,8 @@ export default function NewsletterSection() {
           {/* Heading */}
           <div className="mx-auto max-w-3xl text-center">
 
-            <span className="mb-4 inline-block text-xs sm:text-sm font-medium uppercase tracking-[4px] text-[#F5EBDD]">
-              ✿ Stay Connected
+            <span className="mb-4 inline-flex items-center gap-2 text-xs sm:text-sm font-medium uppercase tracking-[4px] text-[#F5EBDD]">
+              <Sparkles size={12} className="text-[#F5EBDD]" /> Stay Connected
             </span>
 
             <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl leading-tight mb-5">
@@ -81,12 +81,11 @@ export default function NewsletterSection() {
             </div>
           </form>
 
-          {/* Bottom Text */}
-          <div className="mt-6 text-center">
-            <p className="text-sm tracking-wide text-white/75">
-              ✨ No spam, only handmade updates & special offers.
-            </p>
-          </div>
+            <div className="mt-6 text-center">
+              <p className="text-sm tracking-wide text-white/75 flex items-center justify-center gap-2">
+                <Sparkles size={14} className="text-white/75" /> No spam, only handmade updates & special offers.
+              </p>
+            </div>
         </motion.div>
       </div>
     </section>

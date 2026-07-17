@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Search } from 'lucide-react';
+import { X, Search, Frown, ShoppingBag } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
 import { PRODUCTS } from '../data/brand';
 
@@ -59,7 +59,9 @@ export default function SearchModal() {
               <div className="max-h-80 overflow-y-auto">
                 {query.trim().length < 2 ? (
                   <div className="px-5 py-8 text-center">
-                    <div className="text-4xl mb-3">🔍</div>
+                    <div className="w-14 h-14 mx-auto mb-3 bg-[#F5E6DA] rounded-2xl flex items-center justify-center">
+                      <Search size={28} className="text-[#C97C5D]/40" />
+                    </div>
                     <p className="font-sans text-sm text-[#5C4033]/60">Type to search products, categories...</p>
                     <div className="flex flex-wrap gap-2 justify-center mt-4">
                       {['Crochet', 'Slime', 'Mirror Gloves', 'Gift'].map(tag => (
@@ -75,7 +77,9 @@ export default function SearchModal() {
                   </div>
                 ) : results.length === 0 ? (
                   <div className="px-5 py-8 text-center">
-                    <div className="text-4xl mb-3">😔</div>
+                    <div className="w-14 h-14 mx-auto mb-3 bg-[#F5E6DA] rounded-2xl flex items-center justify-center">
+                      <Frown size={28} className="text-[#C97C5D]/40" />
+                    </div>
                     <p className="font-sans text-sm text-[#5C4033]/60">No results for "<strong>{query}</strong>"</p>
                   </div>
                 ) : (
@@ -87,8 +91,8 @@ export default function SearchModal() {
                         animate={{ opacity: 1 }}
                         className="flex items-center gap-3 p-3 rounded-2xl hover:bg-[#F5E6DA] transition-all cursor-pointer group"
                       >
-                        <div className="w-12 h-12 bg-gradient-to-br from-[#F5E6DA] to-[#FDEEE4] rounded-xl flex items-center justify-center text-2xl flex-shrink-0">
-                          {product.emoji}
+                        <div className="w-12 h-12 bg-gradient-to-br from-[#F5E6DA] to-[#FDEEE4] rounded-xl flex items-center justify-center flex-shrink-0">
+                          <ShoppingBag size={22} className="text-[#C97C5D]/60" />
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="font-sans text-sm font-semibold text-[#3E2C23] line-clamp-1">{product.name}</p>

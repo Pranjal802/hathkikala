@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ShoppingBag, Trash2, Plus, Minus, ArrowRight, ShoppingCart } from 'lucide-react';
+import { X, ShoppingBag, Trash2, Plus, Minus, ArrowRight, ShoppingCart, Sparkles } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
 
 export default function CartDrawer() {
@@ -50,14 +50,16 @@ export default function CartDrawer() {
             <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
               {cart.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full text-center py-16">
-                  <div className="text-7xl mb-4">🛒</div>
+                <div className="w-24 h-24 mx-auto mb-4 bg-gradient-to-br from-[#F5E6DA] to-[#FDEEE4] rounded-3xl flex items-center justify-center">
+                    <ShoppingCart size={44} className="text-[#C97C5D]/40" />
+                  </div>
                   <h3 className="font-serif text-xl font-bold text-[#3E2C23] mb-2">Your cart is empty</h3>
                   <p className="font-sans text-sm text-[#5C4033]/60 mb-6">Add some handmade magic to get started!</p>
                   <button
                     onClick={() => setCartOpen(false)}
                     className="bg-gradient-to-r from-[#C97C5D] to-[#D8A7B1] text-white px-6 py-3 rounded-full font-sans font-semibold text-sm shadow-soft"
                   >
-                    Browse Products ✨
+                    <span className="flex items-center gap-2"><Sparkles size={15} /> Browse Products</span>
                   </button>
                 </div>
               ) : (
@@ -70,9 +72,8 @@ export default function CartDrawer() {
                     exit={{ opacity: 0, x: 40 }}
                     className="bg-white rounded-2xl p-4 shadow-soft flex gap-4"
                   >
-                    {/* Product image */}
-                    <div className="w-16 h-16 bg-gradient-to-br from-[#F5E6DA] to-[#FDEEE4] rounded-xl flex items-center justify-center text-3xl flex-shrink-0">
-                      {item.emoji}
+                    <div className="w-16 h-16 bg-gradient-to-br from-[#F5E6DA] to-[#FDEEE4] rounded-xl flex items-center justify-center flex-shrink-0">
+                      <ShoppingBag size={24} className="text-[#C97C5D]/60" />
                     </div>
 
                     {/* Info */}

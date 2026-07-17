@@ -1,5 +1,15 @@
 import { motion } from 'framer-motion';
+import { HandHeart, Heart, Star, Palette, Tag, Leaf } from 'lucide-react';
 import { WHY_CHOOSE } from '../data/brand';
+
+const ICON_MAP = {
+  HandHeart: <HandHeart size={28} />,
+  Heart: <Heart size={28} />,
+  Star: <Star size={28} />,
+  Palette: <Palette size={28} />,
+  Tag: <Tag size={28} />,
+  Leaf: <Leaf size={28} />,
+};
 
 export default function WhyChooseSection() {
   return (
@@ -11,8 +21,9 @@ export default function WhyChooseSection() {
           viewport={{ once: true }}
           className="text-center mb-16"
         >
-          <span className="inline-block font-sans text-sm font-medium text-[#C97C5D] bg-white px-4 py-1.5 rounded-full mb-4 shadow-soft">
-            Why Choose Us 🌟
+          <span className="inline-flex items-center gap-2 font-sans text-sm font-medium text-[#C97C5D] bg-white px-4 py-1.5 rounded-full mb-4 shadow-soft">
+            <Star size={14} className="text-[#C97C5D]" />
+            Why Choose Us
           </span>
           <h2 className="font-serif text-4xl sm:text-5xl font-bold text-[#3E2C23] mb-4">
             The <span className="text-gradient italic">Handmade</span> Difference
@@ -33,8 +44,8 @@ export default function WhyChooseSection() {
               whileHover={{ y: -6, scale: 1.02 }}
               className="group bg-white rounded-3xl p-6 sm:p-8 shadow-soft hover:shadow-hover transition-all duration-300 text-center"
             >
-              <div className="w-16 h-16 mx-auto mb-5 bg-gradient-to-br from-[#F5E6DA] to-[#FDEEE4] rounded-2xl flex items-center justify-center text-3xl shadow-soft group-hover:scale-110 transition-transform duration-300">
-                {item.icon}
+              <div className="w-16 h-16 mx-auto mb-5 bg-gradient-to-br from-[#C97C5D]/15 to-[#D8A7B1]/20 rounded-2xl flex items-center justify-center text-[#C97C5D] shadow-soft group-hover:scale-110 transition-transform duration-300">
+                {ICON_MAP[item.icon]}
               </div>
               <h3 className="font-serif text-lg font-bold text-[#3E2C23] mb-2">{item.title}</h3>
               <p className="font-sans text-sm text-[#5C4033]/70 leading-relaxed">{item.desc}</p>

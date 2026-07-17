@@ -1,7 +1,16 @@
-import { Mail, Phone, MapPin, Leaf, Heart } from 'lucide-react';
+import { Mail, Phone, MapPin, Leaf, Heart, Instagram, Facebook, Youtube, Twitter } from 'lucide-react';
+import logo from '../assets/logo.png';
 
 const QUICK_LINKS = ['Home', 'Shop', 'About', 'Gallery', 'Contact'];
 const CATEGORIES_LIST = ['Premium Roses', 'Mixed Bouquets', 'Seasonal Flowers', 'Plant Care', 'Custom Orders', 'Gift Items'];
+
+// ── Social links ── Instagram is live; add the rest here once ready
+const SOCIAL_LINKS = [
+  { Icon: Instagram, label: 'Instagram', color: 'hover:bg-[#6B8E7F]', href: 'https://www.instagram.com/hathkikala_shop/?hl=en' },
+  { Icon: Facebook, label: 'Facebook', color: 'hover:bg-[#7A9B8C]', href: '#' },
+  { Icon: Youtube, label: 'Youtube', color: 'hover:bg-[#8AA89A]', href: '#' },
+  { Icon: Twitter, label: 'Twitter', color: 'hover:bg-[#9D6B7F]', href: '#' },
+];
 
 export default function Footer() {
   return (
@@ -22,12 +31,12 @@ export default function Footer() {
           {/* Brand column */}
           <div className="lg:col-span-1">
             <div className="flex items-center gap-2 mb-5">
-              <div className="w-9 h-9 rounded-full bg-[#6B8E7F] flex items-center justify-center shadow-sm">
-                <Leaf size={18} className="text-white" />
+              <div className="w-11 h-11 rounded-full bg-[#6B8E7F] flex items-center justify-center shadow-sm overflow-hidden">
+                <img src={logo} alt="Hath Ki Kala Logo" className="w-full h-full object-cover" />
               </div>
               <div>
-                <span className="font-serif text-lg font-light text-white">Flower</span>
-                <span className="font-serif text-lg font-light text-[#A8C5B8]"> Hub</span>
+                <span className="font-serif text-2xl font-light text-[#A8C5B8]"> हाथ की कला</span><br />
+                <span className="font-serif text-sm font-light text-white/70">Stories Woven By Hand</span>
               </div>
             </div>
             <p className="font-sans text-sm text-white/60 leading-relaxed mb-6 font-light">
@@ -35,19 +44,16 @@ export default function Footer() {
             </p>
             {/* Social links */}
             <div className="flex gap-3">
-              {[
-                { icon: '📷', label: 'Instagram', color: 'hover:bg-[#6B8E7F]' },
-                { icon: '👍', label: 'Facebook', color: 'hover:bg-[#7A9B8C]' },
-                { icon: '▶️', label: 'Youtube', color: 'hover:bg-[#8AA89A]' },
-                { icon: '𝕏', label: 'Twitter', color: 'hover:bg-[#9D6B7F]' },
-              ].map(s => (
+              {SOCIAL_LINKS.map(s => (
                 <a
                   key={s.label}
-                  href="#"
+                  href={s.href}
+                  target={s.href !== '#' ? '_blank' : undefined}
+                  rel={s.href !== '#' ? 'noopener noreferrer' : undefined}
                   aria-label={s.label}
-                  className={`w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center text-sm ${s.color} hover:text-white transition-all hover:-translate-y-1`}
+                  className={`w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center ${s.color} hover:text-white transition-all hover:-translate-y-1`}
                 >
-                  {s.icon}
+                  <s.Icon size={16} className="text-white/70" />
                 </a>
               ))}
             </div>
@@ -100,7 +106,7 @@ export default function Footer() {
                 <div>
                   <div className="font-sans text-xs text-white/40 mb-0.5 font-light">Email</div>
                   <a href="mailto:hello@flowerhub.in" className="font-sans text-sm text-white/70 hover:text-[#A8C5B8] transition-colors font-light">
-                    hello@flowerhub.in
+                    hathkikalashop@gmail.com
                   </a>
                 </div>
               </li>
@@ -111,7 +117,7 @@ export default function Footer() {
                 <div>
                   <div className="font-sans text-xs text-white/40 mb-0.5 font-light">WhatsApp</div>
                   <a href="tel:+91" className="font-sans text-sm text-white/70 hover:text-[#A8C5B8] transition-colors font-light">
-                    +91 98765 43210
+                    +91 9313729507
                   </a>
                 </div>
               </li>
@@ -121,7 +127,9 @@ export default function Footer() {
                 </div>
                 <div>
                   <div className="font-sans text-xs text-white/40 mb-0.5 font-light">Based in</div>
-                  <span className="font-sans text-sm text-white/70 font-light">India 🇮🇳</span>
+                  <span className="font-sans text-sm text-white/70 font-light flex items-center gap-1.5">
+                    <MapPin size={12} className="text-[#A8C5B8]" /> India
+                  </span>
                 </div>
               </li>
             </ul>
@@ -131,7 +139,7 @@ export default function Footer() {
         {/* Divider */}
         <div className="border-t border-white/10 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="font-sans text-xs text-white/40 flex items-center gap-1.5 font-light">
-            Made with <Heart size={12} className="text-[#A8C5B8] fill-[#A8C5B8]" /> by Flower Hub · © 2024 All rights reserved
+            Made with <Heart size={12} className="text-[#A8C5B8] fill-[#A8C5B8]" /> by Hath Ki Kala · © 2024 All rights reserved
           </p>
           <div className="flex gap-5">
             {['Privacy Policy', 'Terms of Service', 'Shipping Policy'].map(link => (

@@ -6,6 +6,7 @@ import {
   Star,
   ArrowRight,
 } from "lucide-react";
+import purseModel from "../assets/purse2_model.png";
 
 const FEATURES = [
   {
@@ -89,14 +90,14 @@ export default function About() {
 
             <div className="h-full min-h-[750px] rounded-[36px] overflow-hidden shadow-2xl">
               <img
-                src="https://images.unsplash.com/photo-1524504388940-b1c1722653e1?q=80&w=1200&auto=format&fit=crop"
+                src={purseModel}
                 alt="Handmade Creations"
                 className="w-full h-full object-cover"
               />
             </div>
 
             {/* Floating Card */}
-            <div className="absolute -bottom-8 -right-4 sm:-right-8 bg-white p-6 rounded-3xl shadow-xl max-w-[260px]">
+            {/* <div className="absolute -bottom-8 -right-4 sm:-right-8 bg-white p-6 rounded-3xl shadow-xl max-w-[260px]">
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-12 h-12 rounded-2xl bg-[#6B8E7F]/15 flex items-center justify-center text-[#6B8E7F]">
                   <Star size={22} className="fill-[#6B8E7F]" />
@@ -117,7 +118,7 @@ export default function About() {
                 Unique handcrafted collections made with creativity,
                 tradition, and elegance.
               </p>
-            </div>
+            </div> */}
           </div>
 
           {/* Right Side Content */}
@@ -134,7 +135,7 @@ export default function About() {
                 </h3>
 
                 <p className="text-gray-600 leading-8 mb-6">
-                  Handmade Creations is a handcrafted fashion and accessories
+                  Hath Ki Kala (हाथ की कला) is a handcrafted fashion and accessories
                   brand that celebrates creativity, traditional artistry, and
                   timeless beauty through unique handmade products.
                 </p>
@@ -224,7 +225,7 @@ export default function About() {
           </h3>
 
           <p className="text-white/60 mt-8 text-lg tracking-wide">
-            Handmade Creations
+            Hath Ki Kala
           </p>
         </div>
       </div>

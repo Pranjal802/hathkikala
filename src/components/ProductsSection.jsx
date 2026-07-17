@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Heart, ShoppingCart, Star } from "lucide-react";
+import { Heart, ShoppingCart, Star, Sparkles } from "lucide-react";
 
 import greenBangles from "../assets/green_bangles.jpeg";
 import redBangles from "../assets/red.jpeg";
@@ -11,8 +11,7 @@ const PRODUCTS = [
   {
     id: 1,
     name: "Elegant Green Bangles",
-    price: "₹899",
-    originalPrice: "₹1,199",
+    price: "Price will be announced soon",
     image: greenBangles,
     rating: 4.9,
     reviews: 124,
@@ -21,8 +20,7 @@ const PRODUCTS = [
   {
     id: 2,
     name: "Traditional Red Bangles",
-    price: "₹999",
-    originalPrice: "₹1,299",
+    price: "Price will be announced soon",
     image: redBangles,
     rating: 4.8,
     reviews: 98,
@@ -31,8 +29,7 @@ const PRODUCTS = [
   {
     id: 3,
     name: "Bridal Handmade Bangles",
-    price: "₹1,499",
-    originalPrice: "₹1,899",
+    price: "Price will be announced soon",
     image: bridalBangles,
     rating: 5.0,
     reviews: 76,
@@ -41,8 +38,7 @@ const PRODUCTS = [
   {
     id: 4,
     name: "Designer Pen",
-    price: "₹499",
-    originalPrice: "₹699",
+    price: "Price will be announced soon",
     image: sareePin,
     rating: 4.7,
     reviews: 54,
@@ -51,8 +47,7 @@ const PRODUCTS = [
   {
     id: 5,
     name: "Mirror Work Blouse",
-    price: "₹1,799",
-    originalPrice: "₹2,199",
+    price: "Price will be announced soon",
     image: blouse,
     rating: 4.9,
     reviews: 63,
@@ -71,7 +66,7 @@ export default function ProductsSection() {
       <div className="absolute bottom-0 right-0 w-60 h-60 bg-[#DCCFC0] opacity-20 blur-3xl rounded-full"></div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
-        
+
         {/* Section Heading */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -79,8 +74,9 @@ export default function ProductsSection() {
           viewport={{ once: true }}
           className="text-center mb-20"
         >
-          <span className="inline-block text-sm tracking-[5px] uppercase text-[#6B8E7F] mb-4 font-medium">
-            ✿ Featured Handmade Products
+          <span className="inline-flex items-center gap-2 text-sm tracking-[5px] uppercase text-[#6B8E7F] mb-4 font-medium">
+            <Sparkles size={14} className="text-[#6B8E7F]" />
+            Featured Handmade Products
           </span>
 
           <h2 className="font-serif text-4xl sm:text-5xl lg:text-6xl text-[#3A3A3A] mb-6 leading-tight">
@@ -161,13 +157,9 @@ export default function ProductsSection() {
                 </div>
 
                 {/* Price */}
-                <div className="flex items-center gap-3 mb-6">
-                  <span className="text-2xl font-semibold text-[#3A3A3A]">
+                <div className="mb-6">
+                  <span className="text-sm font-medium text-[#9D6B7F] italic">
                     {product.price}
-                  </span>
-
-                  <span className="text-sm text-[#888] line-through">
-                    {product.originalPrice}
                   </span>
                 </div>
 
