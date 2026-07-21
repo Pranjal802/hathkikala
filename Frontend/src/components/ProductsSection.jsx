@@ -1,61 +1,20 @@
 import { motion } from "framer-motion";
-import { Heart, ShoppingCart, Star, Sparkles } from "lucide-react";
-
-import greenBangles from "../assets/green_bangles.jpeg";
-import redBangles from "../assets/red.jpeg";
-import bridalBangles from "../assets/bridal_bangles.jpeg";
-import sareePin from "../assets/saree_pin.jpeg";
-import blouse from "../assets/blouse.jpeg";
-
-const PRODUCTS = [
-  {
-    id: 1,
-    name: "Elegant Green Bangles",
-    price: "Price will be announced soon",
-    image: greenBangles,
-    rating: 4.9,
-    reviews: 124,
-    badge: "Best Seller",
-  },
-  {
-    id: 2,
-    name: "Traditional Red Bangles",
-    price: "Price will be announced soon",
-    image: redBangles,
-    rating: 4.8,
-    reviews: 98,
-    badge: "Trending",
-  },
-  {
-    id: 3,
-    name: "Bridal Handmade Bangles",
-    price: "Price will be announced soon",
-    image: bridalBangles,
-    rating: 5.0,
-    reviews: 76,
-    badge: "Premium",
-  },
-  {
-    id: 4,
-    name: "Designer Pen",
-    price: "Price will be announced soon",
-    image: sareePin,
-    rating: 4.7,
-    reviews: 54,
-    badge: "Popular",
-  },
-  {
-    id: 5,
-    name: "Mirror Work Blouse",
-    price: "Price will be announced soon",
-    image: blouse,
-    rating: 4.9,
-    reviews: 63,
-    badge: "New",
-  },
-];
+import { Heart, ShoppingCart, Star, Sparkles, Eye } from "lucide-react";
+import { useStore } from "../context/StoreContext.jsx";
 
 export default function ProductsSection() {
+  const {
+    products,
+    loadingProducts,
+    addToCart,
+    setQuickViewProduct,
+    toggleWishlist,
+    isWishlisted,
+    selectedCategory,
+    setSelectedCategory,
+    fetchProducts,
+  } = useStore();
+
   return (
     <section
       id="products"
@@ -72,112 +31,166 @@ export default function ProductsSection() {
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-center mb-20"
+          className="text-center mb-16"
         >
           <span className="inline-flex items-center gap-2 text-sm tracking-[5px] uppercase text-[#6B8E7F] mb-4 font-medium">
             <Sparkles size={14} className="text-[#6B8E7F]" />
-            Featured Handmade Products
+            Featured Handmade Creations
           </span>
 
-          <h2 className="font-serif text-4xl sm:text-5xl lg:text-6xl text-[#3A3A3A] mb-6 leading-tight">
+          <h2 className="font-serif text-4xl sm:text-5xl lg:text-6xl text-[#3A3A3A] mb-4 leading-tight">
             Crafted With Love & <br />
-            <span className="text-[#7A9B8C]">Traditional Elegance</span>
+            <span className="text-[#7A9B8C]">Artisanal Magic</span>
           </h2>
 
           <div className="w-24 h-1 bg-[#7A9B8C] mx-auto rounded-full mb-6"></div>
 
-          <p className="text-[#5A5A5A] max-w-3xl mx-auto text-lg leading-relaxed font-light">
-            Discover our premium handmade collections including elegant
-            bangles, mirror work blouses, designer saree pins, and beautifully
-            crafted traditional accessories.
+          {selectedCategory && (
+            <div className="mb-6 flex justify-center items-center gap-2">
+              <span className="px-4 py-1.5 bg-[#C97C5D] text-white rounded-full font-bold text-xs">
+                Filtered Collection
+              </span>
+              <button
+                onClick={() => {
+                  setSelectedCategory(null);
+                  fetchProducts();
+                }}
+                className="text-xs text-gray-500 underline font-semibold hover:text-[#C97C5D]"
+              >
+                Clear Filter
+              </button>
+            </div>
+          )}
+
+          <p className="text-[#5A5A5A] max-w-2xl mx-auto text-base sm:text-lg leading-relaxed font-light">
+            Every item is hand-stitched, molded, or woven with premium non-toxic materials. Complete your order today with fast delivery across India.
           </p>
         </motion.div>
 
-        {/* Product Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-          {PRODUCTS.map((product, i) => (
-            <motion.div
-              key={product.id}
-              initial={{ opacity: 0, y: 25 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.1 }}
-              whileHover={{ y: -8 }}
-              className="bg-white rounded-[30px] overflow-hidden shadow-md hover:shadow-2xl transition-all duration-500 group border border-[#EFE7DD]"
-            >
-              {/* Product Image */}
-              <div className="relative h-80 overflow-hidden bg-[#F7F2EB]">
-                <img
-                  src={product.image}
-                  alt={product.name}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                />
-
-                {/* Overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
-
-                {/* Badge */}
-                <div className="absolute top-4 right-4 bg-[#9D6B7F] text-white text-xs px-4 py-1.5 rounded-full tracking-[2px] uppercase shadow-md">
-                  {product.badge}
-                </div>
-
-                {/* Wishlist */}
-                <button className="absolute top-4 left-4 bg-white/90 backdrop-blur-md p-2 rounded-full shadow-md hover:bg-white transition">
-                  <Heart
-                    size={18}
-                    className="text-[#6B8E7F] hover:fill-[#6B8E7F]"
-                  />
-                </button>
+        {/* Loading State */}
+        {loadingProducts ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            {[1, 2, 3, 4, 5, 6].map((sk) => (
+              <div key={sk} className="bg-white rounded-3xl h-96 animate-pulse p-6 border border-gray-100 flex flex-col justify-between">
+                <div className="w-full h-48 bg-rose-50 rounded-2xl"></div>
+                <div className="h-6 bg-gray-100 rounded-xl w-3/4"></div>
+                <div className="h-4 bg-gray-100 rounded-xl w-1/2"></div>
+                <div className="h-10 bg-rose-100 rounded-xl"></div>
               </div>
-
-              {/* Content */}
-              <div className="p-6">
-                {/* Product Name */}
-                <h3 className="font-serif text-2xl text-[#3A3A3A] mb-3 leading-snug">
-                  {product.name}
-                </h3>
-
-                {/* Rating */}
-                <div className="flex items-center gap-1 mb-4">
-                  {[...Array(5)].map((_, index) => (
-                    <Star
-                      key={index}
-                      size={15}
-                      className={
-                        index < Math.floor(product.rating)
-                          ? "fill-[#D4A017] text-[#D4A017]"
-                          : "text-[#DDD]"
-                      }
+            ))}
+          </div>
+        ) : products.length === 0 ? (
+          <div className="text-center py-16">
+            <p className="text-xl font-bold text-gray-700">No products found in this selection.</p>
+          </div>
+        ) : (
+          /* Product Grid */
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            {products.map((product, i) => (
+              <motion.div
+                key={product.id}
+                initial={{ opacity: 0, y: 25 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.05 }}
+                className="bg-white rounded-[30px] overflow-hidden shadow-md hover:shadow-2xl transition-all duration-500 group border border-[#EFE7DD] flex flex-col justify-between"
+              >
+                {/* Product Image */}
+                <div className="relative h-72 overflow-hidden bg-[#F7F2EB] flex items-center justify-center">
+                  {product.thumbnail ? (
+                    <img
+                      src={product.thumbnail}
+                      alt={product.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                     />
-                  ))}
+                  ) : (
+                    <span className="text-6xl group-hover:scale-110 transition-transform duration-500">
+                      {product.emoji || '🧸'}
+                    </span>
+                  )}
 
-                  <span className="text-sm text-[#777] ml-2">
-                    ({product.reviews} Reviews)
-                  </span>
-                </div>
+                  {/* Badge */}
+                  {product.badge && (
+                    <div className="absolute top-4 right-4 bg-[#9D6B7F] text-white text-xs px-3.5 py-1 rounded-full font-bold uppercase tracking-wider shadow-sm">
+                      {product.badge}
+                    </div>
+                  )}
 
-                {/* Price */}
-                <div className="mb-6">
-                  <span className="text-sm font-medium text-[#9D6B7F] italic">
-                    {product.price}
-                  </span>
-                </div>
-
-                {/* Buttons */}
-                <div className="flex gap-3">
-                  <button className="flex-1 bg-[#6B8E7F] text-white py-3 rounded-xl hover:bg-[#5A7A6D] transition-all duration-300 flex items-center justify-center gap-2 shadow-md">
-                    <ShoppingCart size={18} />
-                    Add to Cart
+                  {/* Wishlist */}
+                  <button
+                    onClick={() => toggleWishlist(product)}
+                    className="absolute top-4 left-4 bg-white/90 backdrop-blur-md p-2.5 rounded-full shadow-md hover:bg-white transition"
+                  >
+                    <Heart
+                      size={18}
+                      className={isWishlisted(product.id) ? "text-rose-500 fill-rose-500" : "text-[#6B8E7F]"}
+                    />
                   </button>
 
-                  <button className="px-4 border border-[#6B8E7F] text-[#6B8E7F] rounded-xl hover:bg-[#6B8E7F]/10 transition-all duration-300">
-                    <Heart size={18} />
+                  {/* Quick View Overlay Button */}
+                  <button
+                    onClick={() => setQuickViewProduct(product)}
+                    className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-white/90 hover:bg-white text-gray-800 text-xs font-bold px-4 py-2 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-all flex items-center gap-1.5"
+                  >
+                    <Eye className="w-3.5 h-3.5 text-[#C97C5D]" /> Quick View
                   </button>
                 </div>
-              </div>
-            </motion.div>
-          ))}
-        </div>
+
+                {/* Content */}
+                <div className="p-6 flex-1 flex flex-col justify-between">
+                  <div>
+                    <h3 className="font-serif text-2xl text-[#3A3A3A] mb-2 leading-snug">
+                      {product.name}
+                    </h3>
+
+                    {/* Stock & Rating */}
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-1">
+                        {[...Array(5)].map((_, index) => (
+                          <Star
+                            key={index}
+                            size={14}
+                            className="fill-[#D4A017] text-[#D4A017]"
+                          />
+                        ))}
+                        <span className="text-xs text-gray-400 font-bold ml-1">5.0</span>
+                      </div>
+
+                      <span className={`text-xs font-bold ${product.inStock ? 'text-emerald-600' : 'text-rose-500'}`}>
+                        {product.inStock ? 'In Stock' : 'Made to Order'}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div>
+                    {/* Price */}
+                    <div className="mb-5 flex items-baseline gap-2">
+                      <span className="text-2xl font-extrabold text-[#C97C5D]">
+                        ₹{product.discountPrice || product.basePrice}
+                      </span>
+                      {product.discountPrice && (
+                        <span className="text-sm text-gray-400 line-through">
+                          ₹{product.basePrice}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Add to Cart Button */}
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => addToCart(product)}
+                        className="flex-1 bg-[#6B8E7F] hover:bg-[#5A7A6D] text-white py-3 rounded-2xl transition-all duration-300 flex items-center justify-center gap-2 font-bold text-sm shadow-md"
+                      >
+                        <ShoppingCart size={17} />
+                        Add to Cart
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );

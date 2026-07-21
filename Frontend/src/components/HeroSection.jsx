@@ -1,19 +1,24 @@
 import { useState, useEffect, useCallback } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Sparkles, ChevronLeft, ChevronRight } from "lucide-react";
+import greenBangles from "../assets/green_bangles.jpeg";
+import redBangles from "../assets/red.jpeg";
+import bridalBangles from "../assets/bridal_bangles.jpeg";
+import banglesModel from "../assets/bangles_model.png";
+import sareePin from "../assets/saree_pin.jpeg";
+import blouse from "../assets/blouse.jpeg";
 import purseModel from "../assets/purse_model.png";
 import purse2Model from "../assets/purse2_model.png";
-import banglesModel from "../assets/bangles_model.png";
 
-// ── Add your slide images here ──
-// Keep the first slide (green_bangles) or replace it, then fill in the
-// empty src values below with your own imports, e.g.:
-//   import basketWeave from "../assets/basket_weave.jpeg";
-// then set src: basketWeave
 const SLIDES = [
-  { src: purse2Model, alt: "Add your image" },
-  { src: purseModel, alt: "Handmade Purse" },
-  { src: banglesModel, alt: "Add your image" },
+  { src: purse2Model, alt: "Royal Embroidered Model Purse" },
+  { src: banglesModel, alt: "Royal Model Bangle Collection" },
+  { src: greenBangles, alt: "Elegant Green Bangles Set" },
+  { src: redBangles, alt: "Traditional Festive Red Bangles" },
+  { src: bridalBangles, alt: "Bridal Handmade Chooda Set" },
+  { src: purseModel, alt: "Handstitched Velvet Clutch Bag" },
+  { src: blouse, alt: "Artisanal Mirror Work Blouse" },
+  { src: sareePin, alt: "Handcrafted Designer Saree Pin" },
 ];
 
 const AUTOPLAY_MS = 4500;

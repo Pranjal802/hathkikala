@@ -1,154 +1,29 @@
-// import { useState } from "react";
-// import logo from "../assets/logo.png";
-// import {
-//   Menu,
-//   X,
-//   Search,
-//   ShoppingCart,
-//   Heart,
-//   Sparkles,
-// } from "lucide-react";
-
-// const NAV_LINKS = [
-//   { name: "Home", href: "#home" },
-//   { name: "Collections", href: "#collections" },
-//   { name: "Products", href: "#products" },
-//   { name: "About", href: "#about" },
-//   { name: "Gallery", href: "#gallery" },
-//   { name: "Contact", href: "#contact" },
-// ];
-
-// export default function Navbar() {
-//   const [isOpen, setIsOpen] = useState(false);
-
-//   return (
-//     <nav className="sticky top-0 z-50 border-b border-[#E8DDD0] bg-[#F5F1E8]/90 backdrop-blur-md shadow-sm">
-      
-//       <div className="max-w-7xl mx-auto flex h-20 items-center justify-between px-4 sm:px-6 lg:px-8">
-
-//         {/* Logo */}
-//         <div className="flex items-center gap-3 cursor-pointer group">
-          
-//           <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-[#6B8E7F] to-[#8AA89A] shadow-md transition-transform duration-300 group-hover:scale-105 overflow-hidden">
-//             <img src={logo} alt="Hath Ki Kala Logo" className="w-full h-full object-cover" />
-//           </div>
-
-//           <div>
-//             <h2 className="font-serif text-xl text-[#3A3A3A] leading-none">
-//               हाथ की कला
-//             </h2>
-
-//             {/* <span className="text-[11px] uppercase tracking-[2px] text-[#6B8E7F] font-serif">
-//               हाथ की कला
-//             </span> */}
-//           </div>
-//         </div>
-
-//         {/* Desktop Menu */}
-//         <div className="hidden md:flex items-center gap-8">
-
-//           {NAV_LINKS.map((link) => (
-//             <a
-//               key={link.name}
-//               href={link.href}
-//               className="relative text-sm font-medium text-[#5A5A5A] transition-colors duration-300 hover:text-[#6B8E7F] group"
-//             >
-//               {link.name}
-
-//               {/* Underline Hover */}
-//               <span className="absolute left-0 -bottom-1 h-[2px] w-0 bg-[#6B8E7F] transition-all duration-300 group-hover:w-full rounded-full"></span>
-//             </a>
-//           ))}
-//         </div>
-
-//         {/* Right Icons */}
-//         <div className="flex items-center gap-2 sm:gap-3">
-
-//           {/* Search */}
-//           <button className="flex h-10 w-10 items-center justify-center rounded-full transition-all duration-300 hover:bg-[#E8DDD0] hover:scale-105">
-//             <Search size={19} className="text-[#6B8E7F]" />
-//           </button>
-
-//           {/* Wishlist */}
-//           <button className="flex h-10 w-10 items-center justify-center rounded-full transition-all duration-300 hover:bg-[#E8DDD0] hover:scale-105">
-//             <Heart size={19} className="text-[#6B8E7F]" />
-//           </button>
-
-//           {/* Cart */}
-//           <button className="relative flex h-10 w-10 items-center justify-center rounded-full transition-all duration-300 hover:bg-[#E8DDD0] hover:scale-105">
-//             <ShoppingCart size={19} className="text-[#6B8E7F]" />
-
-//             <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#9D6B7F] text-[10px] font-bold text-white">
-//               0
-//             </span>
-//           </button>
-
-//           {/* Mobile Menu Button */}
-//           <button
-//             onClick={() => setIsOpen(!isOpen)}
-//             className="md:hidden flex h-10 w-10 items-center justify-center rounded-full transition-all duration-300 hover:bg-[#E8DDD0]"
-//           >
-//             {isOpen ? (
-//               <X size={24} className="text-[#6B8E7F]" />
-//             ) : (
-//               <Menu size={24} className="text-[#6B8E7F]" />
-//             )}
-//           </button>
-//         </div>
-//       </div>
-
-//       {/* Mobile Menu */}
-//       <div
-//         className={`md:hidden overflow-hidden transition-all duration-500 ${
-//           isOpen ? "max-h-96 border-t border-[#E8DDD0]" : "max-h-0"
-//         }`}
-//       >
-//         <div className="bg-[#F5F1E8] px-6 py-5 flex flex-col gap-5">
-
-//           {NAV_LINKS.map((link) => (
-//             <a
-//               key={link.name}
-//               href={link.href}
-//               onClick={() => setIsOpen(false)}
-//               className="group relative w-fit text-[#5A5A5A] text-sm font-medium transition-colors duration-300 hover:text-[#6B8E7F]"
-//             >
-//               {link.name}
-
-//               {/* Underline */}
-//               <span className="absolute left-0 -bottom-1 h-[2px] w-0 bg-[#6B8E7F] transition-all duration-300 group-hover:w-full rounded-full"></span>
-//             </a>
-//           ))}
-//         </div>
-//       </div>
-//     </nav>
-//   );
-// }
 import { useState } from "react";
+import { Link, NavLink, useNavigate } from "react-router-dom";
 import logo from "../assets/logo.png";
+import { useStore } from "../context/StoreContext.jsx";
 import {
   Menu,
   X,
   Search,
   ShoppingCart,
-  Heart,
+  User,
+  PackageCheck,
+  LogOut,
+  ShieldCheck,
 } from "lucide-react";
 
-// ── Swap these two to try a different brand direction ──
 const BRAND_NAME = "हाथ की कला";
-const TAGLINE = "Stories Woven By Hand"; // "stories woven by hand"
-// Other name options to try: कारीगर · हस्तकला · हाथों की कहानी · कलाघर
+const TAGLINE = "Stories Woven By Hand";
 
 const NAV_LINKS = [
-  { name: "Home", href: "#home" },
-  { name: "Collections", href: "#collections" },
-  { name: "Products", href: "#products" },
-  { name: "About", href: "#about" },
-  { name: "Gallery", href: "#gallery" },
-  { name: "Contact", href: "#contact" },
+  { name: "Home", path: "/" },
+  { name: "Shop", path: "/products" },
+  { name: "Collections", path: "/collections" },
+  { name: "About", path: "/about" },
+  { name: "Contact", path: "/contact" },
 ];
 
-// Small repeating diamond motif — a nod to Indian block-print borders,
-// used as a one-pixel-tall signature rule under the navbar.
 function BlockPrintRule() {
   return (
     <div
@@ -166,12 +41,24 @@ function BlockPrintRule() {
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
+  const [accountMenuOpen, setAccountMenuOpen] = useState(false);
+  const navigate = useNavigate();
+
+  const {
+    user,
+    logout,
+    cartCount,
+    setCartOpen,
+    setSearchOpen,
+    setLoginOpen,
+  } = useStore();
 
   return (
-    <nav className="sticky top-0 z-50 bg-[#F5F1E8]/95 backdrop-blur-md shadow-sm">
+    <nav className="sticky top-0 z-40 bg-[#F5F1E8]/95 backdrop-blur-md shadow-sm">
       <div className="max-w-7xl mx-auto flex h-20 items-center justify-between px-4 sm:px-6 lg:px-8">
+        
         {/* Logo + wordmark */}
-        <a href="#home" className="flex items-center gap-3 cursor-pointer group">
+        <Link to="/" className="flex items-center gap-3 cursor-pointer group">
           <div className="relative flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-[#6B8E7F] to-[#4F6B5C] shadow-md transition-all duration-300 group-hover:scale-105 group-hover:shadow-lg overflow-hidden ring-1 ring-[#C9A227]/40">
             <img src={logo} alt={`${BRAND_NAME} logo`} className="w-full h-full object-cover" />
           </div>
@@ -184,48 +71,110 @@ export default function Navbar() {
               {TAGLINE}
             </span>
           </div>
-        </a>
+        </Link>
 
-        {/* Desktop Menu */}
+        {/* Desktop Router Nav Links */}
         <div className="hidden md:flex items-center gap-9">
           {NAV_LINKS.map((link) => (
-            <a
+            <NavLink
               key={link.name}
-              href={link.href}
-              className="relative text-sm font-medium text-[#5A5A5A] transition-colors duration-300 hover:text-[#4F6B5C] group"
+              to={link.path}
+              className={({ isActive }) =>
+                `relative text-sm font-medium transition-colors duration-300 ${
+                  isActive ? "text-[#C97C5D] font-bold" : "text-[#5A5A5A] hover:text-[#4F6B5C]"
+                }`
+              }
             >
               {link.name}
-              <span className="absolute left-1/2 -bottom-1.5 h-[2px] w-0 -translate-x-1/2 bg-[#C9A227] transition-all duration-300 group-hover:w-full rounded-full" />
-            </a>
+            </NavLink>
           ))}
         </div>
 
-        {/* Right Icons */}
+        {/* Right Action Buttons */}
         <div className="flex items-center gap-1.5 sm:gap-2">
+          
+          {/* Search Trigger */}
           <button
+            onClick={() => setSearchOpen(true)}
             aria-label="Search"
             className="flex h-10 w-10 items-center justify-center rounded-full text-[#6B8E7F] transition-all duration-300 hover:bg-[#E8DDD0] hover:scale-105"
           >
             <Search size={19} />
           </button>
 
+          {/* Cart Trigger */}
           <button
-            aria-label="Wishlist"
-            className="flex h-10 w-10 items-center justify-center rounded-full text-[#6B8E7F] transition-all duration-300 hover:bg-[#E8DDD0] hover:scale-105"
-          >
-            <Heart size={19} />
-          </button>
-
-          <button
+            onClick={() => setCartOpen(true)}
             aria-label="Cart"
             className="relative flex h-10 w-10 items-center justify-center rounded-full text-[#6B8E7F] transition-all duration-300 hover:bg-[#E8DDD0] hover:scale-105"
           >
             <ShoppingCart size={19} />
-            <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-[#9D6B7F] text-[10px] font-bold text-white ring-2 ring-[#F5F1E8]">
-              0
-            </span>
+            {cartCount > 0 && (
+              <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-[#9D6B7F] text-[10px] font-bold text-white ring-2 ring-[#F5F1E8]">
+                {cartCount}
+              </span>
+            )}
           </button>
 
+          {/* Account Profile / Login */}
+          <div className="relative">
+            {user ? (
+              <button
+                onClick={() => setAccountMenuOpen(!accountMenuOpen)}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-50 border border-rose-200 rounded-full text-xs font-bold text-[#C97C5D] hover:bg-rose-100 transition"
+              >
+                <User className="w-3.5 h-3.5" /> {user.name?.split(' ')[0] || 'Account'}
+              </button>
+            ) : (
+              <button
+                onClick={() => setLoginOpen(true)}
+                className="px-4 py-1.5 bg-[#6B8E7F] text-white font-bold rounded-full text-xs hover:bg-[#4F6B5C] transition shadow-sm"
+              >
+                Sign In
+              </button>
+            )}
+
+            {/* Account Dropdown */}
+            {accountMenuOpen && user && (
+              <div className="absolute right-0 mt-2 w-48 bg-white rounded-2xl shadow-xl border border-rose-100 py-2 z-50 animate-fadeIn">
+                <div className="px-4 py-2 border-b border-gray-100">
+                  <p className="text-xs font-bold text-gray-800 truncate">{user.name || user.email}</p>
+                  <p className="text-[10px] text-gray-400 truncate">{user.email}</p>
+                </div>
+
+                <Link
+                  to="/orders"
+                  onClick={() => setAccountMenuOpen(false)}
+                  className="w-full px-4 py-2 text-left text-xs font-semibold text-gray-700 hover:bg-rose-50 flex items-center gap-2"
+                >
+                  <PackageCheck className="w-4 h-4 text-[#C97C5D]" /> My Orders
+                </Link>
+
+                {user.role === "admin" && (
+                  <Link
+                    to="/admin"
+                    onClick={() => setAccountMenuOpen(false)}
+                    className="w-full px-4 py-2 text-left text-xs font-semibold text-[#C97C5D] hover:bg-rose-50 flex items-center gap-2"
+                  >
+                    <ShieldCheck className="w-4 h-4" /> Admin Studio
+                  </Link>
+                )}
+
+                <button
+                  onClick={() => {
+                    setAccountMenuOpen(false);
+                    logout();
+                    navigate('/');
+                  }}
+                  className="w-full px-4 py-2 text-left text-xs font-semibold text-rose-600 hover:bg-rose-50 flex items-center gap-2 border-t border-gray-100 mt-1"
+                >
+                  <LogOut className="w-4 h-4" /> Sign Out
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Mobile Menu Button */}
           <button
             onClick={() => setIsOpen(!isOpen)}
             aria-label="Toggle menu"
@@ -236,7 +185,6 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Signature block-print rule */}
       <BlockPrintRule />
 
       {/* Mobile Menu */}
@@ -245,18 +193,28 @@ export default function Navbar() {
           isOpen ? "max-h-96 border-b border-[#E8DDD0]" : "max-h-0"
         }`}
       >
-        <div className="bg-[#F5F1E8] px-6 py-5 flex flex-col gap-5">
+        <div className="bg-[#F5F1E8] px-6 py-5 flex flex-col gap-4">
           {NAV_LINKS.map((link) => (
-            <a
+            <NavLink
               key={link.name}
-              href={link.href}
+              to={link.path}
               onClick={() => setIsOpen(false)}
-              className="group relative w-fit text-[#5A5A5A] text-sm font-medium transition-colors duration-300 hover:text-[#4F6B5C]"
+              className={({ isActive }) =>
+                `text-sm font-medium transition-colors ${
+                  isActive ? "text-[#C97C5D] font-bold" : "text-[#5A5A5A]"
+                }`
+              }
             >
               {link.name}
-              <span className="absolute left-0 -bottom-1 h-[2px] w-0 bg-[#C9A227] transition-all duration-300 group-hover:w-full rounded-full" />
-            </a>
+            </NavLink>
           ))}
+          <NavLink
+            to="/orders"
+            onClick={() => setIsOpen(false)}
+            className="text-sm font-medium text-[#5A5A5A]"
+          >
+            My Orders
+          </NavLink>
         </div>
       </div>
     </nav>

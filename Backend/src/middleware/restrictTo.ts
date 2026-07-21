@@ -3,7 +3,7 @@ import { AppError } from '../utils/AppError.js';
 
 // Usage: router.post('/', protect, restrictTo('admin'), createCategory)
 // Must run AFTER `protect`, since it relies on req.user being set.
-export const restrictTo = (...roles: Array<'user' | 'admin'>) => {
+export const restrictTo = (...roles: Array<'customer' | 'user' | 'admin'>) => {
   return (req: Request, res: Response, next: NextFunction) => {
     if (!req.user) {
       return next(new AppError('Unauthorized', 401));

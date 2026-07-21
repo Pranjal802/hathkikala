@@ -42,7 +42,10 @@ export async function addItemToCart(req: Request, res: Response) {
   if (!product) {
     throw new AppError('Product not found', 404);
   }
-  const variant = product.variants.find((v) => v.sku === variantSku && v.isActive);
+  let variant = product.variants.find((v) => v.sku === variantSku && v.isActive);
+  if (!variant && product.variants.length > 0) {
+    variant = product.variants.find((v) => v.isActive) || product.variants[0];
+  }
   if (!variant) {
     throw new AppError('Selected variant is not available', 404);
   }

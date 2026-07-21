@@ -5,8 +5,11 @@ import { Camera } from "lucide-react";
 import greenBangles from "../assets/green_bangles.jpeg";
 import redBangles from "../assets/red.jpeg";
 import bridalBangles from "../assets/bridal_bangles.jpeg";
+import banglesModel from "../assets/bangles_model.png";
 import sareePin from "../assets/saree_pin.jpeg";
 import blouse from "../assets/blouse.jpeg";
+import purseModel from "../assets/purse_model.png";
+import purse2Model from "../assets/purse2_model.png";
 
 const GALLERY_ITEMS = [
   {
@@ -44,13 +47,27 @@ const GALLERY_ITEMS = [
     category: "Embroidery Design",
     tall: true,
   },
-  // {
-  //   id: 6,
-  //   image: purse,
-  //   label: "Handmade Thread Purse",
-  //   category: "Creative Handcraft",
-  //   tall: false,
-  // },
+  {
+    id: 6,
+    image: purseModel,
+    label: "Handstitched Velvet Clutch",
+    category: "Artisanal Purses",
+    tall: false,
+  },
+  {
+    id: 7,
+    image: purse2Model,
+    label: "Royal Embroidered Model Purse",
+    category: "Luxury Accessories",
+    tall: true,
+  },
+  {
+    id: 8,
+    image: banglesModel,
+    label: "Royal Model Bangle Collection",
+    category: "Kundan Jewelry",
+    tall: false,
+  },
 ];
 
 export default function GallerySection() {

@@ -15,22 +15,23 @@ const cookieOptions = {
 };
 
 export async function signup(req: Request, res: Response) {
-  const { username, email, phone, password } = req.body as RegisterDto;
+  const { name, username, email, phone, password } = req.body as RegisterDto;
+  const displayName = (name ?? username ?? email.split('@')[0]) as string;
 
   const existingUser = await User.findOne({
-    $or: [{ username }, { email }, { phone }],
+    $or: [{ email }, { phone }],
   });
 
   if (existingUser) {
-    throw new AppError("Email/Company name already exists", 409);
+    throw new AppError("Email/phone already exists", 409);
   }
 
   const newUser = await User.create({
-    // username,
+    name: displayName,
     email,
     phone,
     password: await bcrypt.hash(password, parseInt(process.env.SALT_ROUNDS || "10", 10)),
-  });
+  }) as any;
 
   const accessToken = jwt.sign(
     { userId: newUser._id, email: newUser.email },

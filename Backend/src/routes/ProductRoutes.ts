@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import {
   listProductsByCategory,
+  listAllProductsPublic,
   getProductBySlug,
   listProductsAdmin,
   getProductByIdAdmin,
@@ -20,12 +21,14 @@ import { restrictTo } from '../middleware/restrictTo.js';
 import { upload } from '../middleware/upload.js';
 
 // Mounted at /api in server.ts, so these become:
+//   GET  /api/products
 //   GET  /api/categories/:slug/products
 //   GET  /api/products/:slug
 //   ...admin routes below
 const router = Router();
 
 // Public
+router.get('/products', listAllProductsPublic);
 router.get(
   '/categories/:slug/products',
   validateQuery(productListQuerySchema),

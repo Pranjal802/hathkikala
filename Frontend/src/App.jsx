@@ -1,29 +1,68 @@
-import Navbar from './components/Navbar.jsx'
-import HeroSection from './components/HeroSection.jsx'
-import CategoriesSection from './components/CategoriesSection.jsx'
-import ProductsSection from './components/ProductsSection.jsx'
-import GallerySection from './components/GallerySection.jsx'
-import TestimonialsSection from './components/TestimonialsSection.jsx'
-import NewsletterSection from './components/NewsletterSection.jsx'
-import Footer from './components/Footer.jsx'
-import AboutUs from './components/AboutUs.jsx'
-import WelcomePopup from './components/WelcomePopup.jsx'
+import { Routes, Route, useLocation } from 'react-router-dom';
+import Navbar from './components/Navbar.jsx';
+import Footer from './components/Footer.jsx';
+import WelcomePopup from './components/WelcomePopup.jsx';
+import CartDrawer from './components/CartDrawer.jsx';
+import LoginModal from './components/LoginModal.jsx';
+import QuickViewModal from './components/QuickViewModal.jsx';
+import SearchModal from './components/SearchModal.jsx';
+import CheckoutModal from './components/CheckoutModal.jsx';
+import OrdersModal from './components/OrdersModal.jsx';
+import Notification from './components/Notification.jsx';
+
+// Pages
+import HomePage from './pages/HomePage.jsx';
+import ProductsPage from './pages/ProductsPage.jsx';
+import ProductDetailPage from './pages/ProductDetailPage.jsx';
+import CollectionsPage from './pages/CollectionsPage.jsx';
+import AboutPage from './pages/AboutPage.jsx';
+import ContactPage from './pages/ContactPage.jsx';
+import OrdersPage from './pages/OrdersPage.jsx';
+import AdminStudioPage from './pages/AdminStudioPage.jsx';
 
 function App() {
+  const location = useLocation();
+  const isAdminRoute = location.pathname.startsWith('/admin');
+
   return (
-    <div className="bg-white">
-      <WelcomePopup />
-      <Navbar />
-      <HeroSection />
-      <CategoriesSection />
-      <ProductsSection />
-      <GallerySection />
-      <TestimonialsSection />
-      <AboutUs/>
-      <NewsletterSection />
-      <Footer />
+    <div className="bg-[#FFF8F2] min-h-screen flex flex-col justify-between">
+      <Notification />
+
+      {!isAdminRoute && (
+        <>
+          <WelcomePopup />
+          <Navbar />
+        </>
+      )}
+
+      <main className="flex-1">
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/products" element={<ProductsPage />} />
+          <Route path="/product/:slug" element={<ProductDetailPage />} />
+          <Route path="/collections" element={<CollectionsPage />} />
+          <Route path="/about" element={<AboutPage />} />
+          <Route path="/contact" element={<ContactPage />} />
+          <Route path="/orders" element={<OrdersPage />} />
+          <Route path="/admin" element={<AdminStudioPage />} />
+        </Routes>
+      </main>
+
+      {!isAdminRoute && <Footer />}
+
+      {/* Customer Modals & Portals */}
+      {!isAdminRoute && (
+        <>
+          <CartDrawer />
+          <LoginModal />
+          <QuickViewModal />
+          <SearchModal />
+          <CheckoutModal />
+          <OrdersModal />
+        </>
+      )}
     </div>
-  )
+  );
 }
 
-export default App
+export default App;

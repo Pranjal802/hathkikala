@@ -24,7 +24,7 @@ const OrderItemSchema = new Schema<IOrderItem>({
 // Embedded: 1-to-1 with the order, always read together, no reason
 // to query payments independently of their order in this app.
 export interface IPayment {
-  provider: 'razorpay' | 'stripe' | 'paypal';
+  provider: 'cod' | 'razorpay' | 'stripe' | 'paypal';
   providerOrderId?: string; // e.g. Razorpay order_id / Stripe payment_intent id
   providerPaymentId?: string; // set once payment succeeds
   status: 'pending' | 'paid' | 'failed' | 'refunded';
@@ -34,7 +34,7 @@ export interface IPayment {
 }
 
 const PaymentSchema = new Schema<IPayment>({
-  provider: { type: String, enum: ['razorpay', 'stripe', 'paypal'], required: true },
+  provider: { type: String, enum: ['cod', 'razorpay', 'stripe', 'paypal'], required: true },
   providerOrderId: { type: String },
   providerPaymentId: { type: String },
   status: { type: String, enum: ['pending', 'paid', 'failed', 'refunded'], default: 'pending' },
@@ -92,12 +92,19 @@ export interface IOrder {
 
   status:
     | 'pending'
+    | 'placed'
+    | 'confirmed'
+    | 'in_production'
     | 'paid'
     | 'processing'
     | 'shipped'
     | 'delivered'
     | 'cancelled'
     | 'refunded';
+
+  trackingNumber?: string;
+  courierName?: string;
+  customizationNotes?: string;
 
   statusHistory: IStatusHistoryEntry[]; // small audit trail, always read with the order
 
@@ -121,9 +128,13 @@ const orderSchema = new Schema<IOrder>({
 
   status: {
     type: String,
-    enum: ['pending', 'paid', 'processing', 'shipped', 'delivered', 'cancelled', 'refunded'],
-    default: 'pending',
+    enum: ['pending', 'placed', 'confirmed', 'in_production', 'paid', 'processing', 'shipped', 'delivered', 'cancelled', 'refunded'],
+    default: 'placed',
   },
+
+  trackingNumber: { type: String },
+  courierName: { type: String },
+  customizationNotes: { type: String },
 
   statusHistory: [StatusHistorySchema],
 

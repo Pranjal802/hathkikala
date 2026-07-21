@@ -8,7 +8,17 @@ import { toCartResponse } from '../utils/toCartResponse.js';
 // + what's in their cart, so the FE doesn't have to fire two requests and
 // juggle loading states separately for something it needs together anyway.
 export async function getMyAccount(req: Request, res: Response) {
-  const user = req.user!;
+  if (!req.user) {
+    return res.status(200).json({
+      success: true,
+      data: {
+        user: null,
+        cart: null,
+      },
+    });
+  }
+
+  const user = req.user;
 
   const cart = await Cart.findOneAndUpdate(
     { userId: user._id },

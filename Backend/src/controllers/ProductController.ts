@@ -86,6 +86,49 @@ export async function listProductsByCategory(req: Request, res: Response) {
   });
 }
 
+// GET /api/products - List/Search/Filter active products across all categories
+export async function listAllProductsPublic(req: Request, res: Response) {
+  const { categoryId, search, sort, isBestSeller, isTrending, page = '1', limit = '50' } = req.query;
+
+  const filter: Record<string, unknown> = { isActive: true };
+  if (categoryId) filter.categoryId = categoryId;
+  if (isBestSeller === 'true') filter.isBestSeller = true;
+  if (isTrending === 'true') filter.isTrending = true;
+
+  if (search && typeof search === 'string' && search.trim() !== '') {
+    filter.$or = [
+      { name: { $regex: search.trim(), $options: 'i' } },
+      { description: { $regex: search.trim(), $options: 'i' } },
+    ];
+  }
+
+  const pageNum = parseInt(page as string, 10) || 1;
+  const limitNum = parseInt(limit as string, 10) || 50;
+  const skip = (pageNum - 1) * limitNum;
+
+  let sortOption: Record<string, 1 | -1> = { createdAt: -1 };
+  if (sort === 'price_asc') sortOption = { basePrice: 1 };
+  if (sort === 'price_desc') sortOption = { basePrice: -1 };
+
+  const [products, total] = await Promise.all([
+    Product.find(filter).sort(sortOption).skip(skip).limit(limitNum),
+    Product.countDocuments(filter),
+  ]);
+
+  return res.status(200).json({
+    success: true,
+    data: {
+      products: products.map(toProductListItem),
+      pagination: {
+        page: pageNum,
+        limit: limitNum,
+        total,
+        totalPages: Math.ceil(total / limitNum),
+      },
+    },
+  });
+}
+
 // GET /api/products/:slug
 export async function getProductBySlug(req: Request, res: Response) {
   const slug = req.params.slug;
@@ -165,6 +208,13 @@ export async function createProduct(req: Request, res: Response) {
     throw new AppError('Category not found', 404);
   }
 
+  const normalizedImages = (body.images ?? []).map((image, index) => ({
+    url: image.url,
+    publicId: image.publicId ?? `manual-${Date.now()}-${index}`,
+    altText: image.altText ?? body.name,
+    sortOrder: image.sortOrder ?? index,
+  }));
+
   const product = await Product.create({
     categoryId: category._id,
     name: body.name,
@@ -172,7 +222,7 @@ export async function createProduct(req: Request, res: Response) {
     basePrice: body.basePrice,
     isCustomizable: body.isCustomizable,
     variants: body.variants,
-    images: [],
+    images: normalizedImages,
     ...(body.description !== undefined ? { description: body.description } : {}),
     ...(body.productionTimeDays !== undefined ? { productionTimeDays: body.productionTimeDays } : {}),
   });

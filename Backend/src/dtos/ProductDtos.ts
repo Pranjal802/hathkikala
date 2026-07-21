@@ -38,6 +38,13 @@ const variantInputSchema = z.object({
   isActive: z.coerce.boolean().optional().default(true),
 });
 
+const productImageInputSchema = z.object({
+  url: z.string().trim().url(),
+  publicId: z.string().trim().min(1).optional(),
+  altText: z.string().trim().optional(),
+  sortOrder: z.coerce.number().int().nonnegative().optional().default(0),
+});
+
 // POST /api/products - creating an item always requires its category and
 // at least one variant (a product with zero purchasable variants isn't sellable yet).
 export const createProductSchema = z.object({
@@ -48,6 +55,7 @@ export const createProductSchema = z.object({
   isCustomizable: z.coerce.boolean().optional().default(false),
   productionTimeDays: z.coerce.number().int().nonnegative().optional(),
   variants: z.array(variantInputSchema).min(1, 'At least one variant is required'),
+  images: z.array(productImageInputSchema).optional(),
 });
 export type CreateProductDto = z.infer<typeof createProductSchema>;
 

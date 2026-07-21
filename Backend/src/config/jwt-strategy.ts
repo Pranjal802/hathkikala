@@ -1,7 +1,10 @@
 import passport from 'passport';
 import { Strategy as JwtStrategy, type StrategyOptionsWithoutRequest } from 'passport-jwt';
 import type { Request } from 'express';
+import dotenv from 'dotenv';
 import User from '../models/User.js';
+
+dotenv.config();
 
 // Custom extractor: pull token from cookie instead of Authorization header
 const cookieExtractor = (req: Request): string | null => {
@@ -11,9 +14,11 @@ const cookieExtractor = (req: Request): string | null => {
     return null;
 };
 
+const secret = process.env.JWT_SECRET || '771a68cc448bae219196b26c0c7948f133857cbd61bb505d92454309c78511b50315a1dfafa08a370018b30cdd709a32fd1d7f012ebce85aa763a0154d93bfe1';
+
 const options: StrategyOptionsWithoutRequest = {
     jwtFromRequest: cookieExtractor,
-    secretOrKey: process.env.JWT_SECRET as string,
+    secretOrKey: secret,
 };
 
 passport.use(

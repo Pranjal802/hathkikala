@@ -37,7 +37,7 @@ export interface IUser {
   phone: string;
   password: string;
 
-  role: 'user' | 'admin';
+  role: 'customer' | 'admin' | 'user';
 
   isEmailVerified: boolean;
   emailVerificationToken?: string;
@@ -61,7 +61,7 @@ const userSchema = new Schema<IUser>({
   phone: { type: String, required: true, unique: true, trim: true },
   password: { type: String, required: true }, // store bcrypt hash, never plain text
 
-  role: { type: String, enum: ['user', 'admin'], default: 'user' },
+  role: { type: String, enum: ['customer', 'admin', 'user'], default: 'customer' },
 
   isEmailVerified: { type: Boolean, default: false },
   emailVerificationToken: { type: String, select: false },

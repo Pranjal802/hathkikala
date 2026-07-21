@@ -50,6 +50,12 @@ export interface IProduct {
   variants: IVariant[];
   images: IImage[];
 
+  badge?: string;
+  discountPrice?: number;
+  emoji?: string;
+  isBestSeller?: boolean;
+  isTrending?: boolean;
+
   isActive: boolean; // sold out / discontinued toggle
 }
 
@@ -61,6 +67,11 @@ const productSchema = new Schema<IProduct>({
   description: { type: String, trim: true },
 
   basePrice: { type: Number, required: true, min: 0 },
+  discountPrice: { type: Number, min: 0 },
+  badge: { type: String },
+  emoji: { type: String },
+  isBestSeller: { type: Boolean, default: false },
+  isTrending: { type: Boolean, default: false },
 
   isCustomizable: { type: Boolean, default: false },
   productionTimeDays: { type: Number },

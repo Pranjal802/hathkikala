@@ -10,7 +10,12 @@ function attributesToPlainObject(attributes: Map<string, string> | Record<string
 export function toOrderResponse(order: OrderDocument) {
   return {
     id: order._id.toString(),
+    userId: order.userId ? order.userId.toString() : null,
     status: order.status,
+    trackingNumber: order.trackingNumber ?? null,
+    courierName: order.courierName ?? null,
+    customizationNotes: order.customizationNotes ?? null,
+    cancelReason: order.cancelReason ?? null,
     items: order.items.map((item) => ({
       productId: item.productId.toString(),
       productName: item.productName,
