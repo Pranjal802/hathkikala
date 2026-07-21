@@ -1,0 +1,36 @@
+import type { OrderDocument } from '../models/Order.js';
+
+function attributesToPlainObject(attributes: Map<string, string> | Record<string, string>) {
+  return attributes instanceof Map ? Object.fromEntries(attributes) : attributes;
+}
+
+// Orders are frozen snapshots (see Order model comments) - unlike Cart, we
+// don't need to fetch live product data here at all, everything needed to
+// display the order is already stored on the order itself.
+export function toOrderResponse(order: OrderDocument) {
+  return {
+    id: order._id.toString(),
+    status: order.status,
+    items: order.items.map((item) => ({
+      productId: item.productId.toString(),
+      productName: item.productName,
+      variantSku: item.variantSku,
+      variantAttributes: attributesToPlainObject(item.variantAttributes),
+      quantity: item.quantity,
+      unitPrice: item.unitPrice,
+      lineTotal: item.unitPrice * item.quantity,
+    })),
+    shippingAddress: order.shippingAddress,
+    payment: {
+      provider: order.payment.provider,
+      status: order.payment.status,
+      amount: order.payment.amount,
+      currency: order.payment.currency,
+    },
+    subtotal: order.subtotal,
+    shippingFee: order.shippingFee,
+    totalAmount: order.totalAmount,
+    statusHistory: order.statusHistory,
+    createdAt: order.createdAt,
+  };
+}
