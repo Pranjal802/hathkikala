@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { useStore } from '../context/StoreContext.jsx';
+import { resolveImageUrl } from '../utils/resolveImageUrl.js';
 import { Package, Truck, CheckCircle2, Clock, MapPin, Sparkles, ShoppingBag } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -89,7 +90,7 @@ export default function OrdersPage() {
                     <div key={idx} className="flex items-center justify-between bg-rose-50/40 p-4 rounded-2xl border border-rose-100">
                       <div className="flex items-center gap-3">
                         <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-xl shadow-sm overflow-hidden">
-                          {item.thumbnail ? <img src={item.thumbnail} alt="" className="w-full h-full object-cover" /> : '🧸'}
+                          {item.thumbnail ? <img src={resolveImageUrl(item.thumbnail)} alt="" className="w-full h-full object-cover" /> : '🧸'}
                         </div>
                         <div>
                           <p className="font-sans text-sm font-bold text-[#3E2C23]">{item.productName}</p>

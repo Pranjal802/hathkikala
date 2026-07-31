@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Search, Frown, ShoppingBag } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
+import { resolveImageUrl } from '../utils/resolveImageUrl.js';
 
 export default function SearchModal() {
   const { searchOpen, setSearchOpen, addToCart, products } = useStore();
@@ -91,7 +92,7 @@ export default function SearchModal() {
                         className="flex items-center gap-3 p-3 rounded-2xl hover:bg-[#F5E6DA] transition-all cursor-pointer group"
                       >
                         <div className="w-12 h-12 bg-gradient-to-br from-[#F5E6DA] to-[#FDEEE4] rounded-xl flex items-center justify-center flex-shrink-0 text-xl overflow-hidden">
-                          {product.thumbnail ? <img src={product.thumbnail} alt="" className="w-full h-full object-cover" /> : product.emoji || '🧸'}
+                          {product.thumbnail ? <img src={resolveImageUrl(product.thumbnail)} alt="" className="w-full h-full object-cover" /> : product.emoji || '🧸'}
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="font-sans text-sm font-bold text-[#3E2C23] line-clamp-1">{product.name}</p>

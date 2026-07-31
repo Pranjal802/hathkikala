@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { useStore } from '../context/StoreContext.jsx';
 import { api } from '../services/api.js';
+import { resolveImageUrl } from '../utils/resolveImageUrl.js';
 
 export default function ProductDetailPage() {
   const { slug } = useParams();
@@ -90,7 +91,7 @@ export default function ProductDetailPage() {
           <div className="space-y-4">
             <div className="relative h-96 sm:h-[450px] bg-gradient-to-br from-[#F5E6DA]/50 to-[#FDEEE4]/50 rounded-3xl overflow-hidden flex items-center justify-center border border-rose-100">
               {images[activeImageIndex] ? (
-                <img src={images[activeImageIndex]} alt={product.name} className="w-full h-full object-cover" />
+                <img src={resolveImageUrl(images[activeImageIndex])} alt={product.name} className="w-full h-full object-cover" />
               ) : (
                 <span className="text-9xl">{product.emoji || '🧸'}</span>
               )}
@@ -112,7 +113,7 @@ export default function ProductDetailPage() {
                       activeImageIndex === i ? 'border-[#C97C5D] scale-95' : 'border-transparent opacity-70 hover:opacity-100'
                     }`}
                   >
-                    <img src={imgUrl} alt="" className="w-full h-full object-cover" />
+                    <img src={resolveImageUrl(imgUrl)} alt="" className="w-full h-full object-cover" />
                   </button>
                 ))}
               </div>

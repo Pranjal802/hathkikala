@@ -1,6 +1,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Star, Heart, ShoppingCart, Check, HandHeart } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
+import { resolveImageUrl } from '../utils/resolveImageUrl.js';
 import { useState, useEffect } from 'react';
 
 export default function QuickViewModal() {
@@ -58,7 +59,7 @@ export default function QuickViewModal() {
               <div className="grid md:grid-cols-2">
                 <div className="bg-gradient-to-br from-[#F5E6DA] to-[#FDEEE4] flex items-center justify-center p-8 min-h-64 relative">
                   {product.thumbnail ? (
-                    <img src={product.thumbnail} alt={product.name} className="w-full h-full object-cover rounded-2xl shadow-md" />
+                    <img src={resolveImageUrl(product.thumbnail)} alt={product.name} className="w-full h-full object-cover rounded-2xl shadow-md" />
                   ) : (
                     <span className="text-8xl">{product.emoji || '🧸'}</span>
                   )}

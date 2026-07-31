@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ShoppingBag, Trash2, Plus, Minus, ArrowRight, ShoppingCart, Sparkles, Tag } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
+import { resolveImageUrl } from '../utils/resolveImageUrl.js';
 import { api } from '../services/api';
 
 export default function CartDrawer() {
@@ -110,7 +111,7 @@ export default function CartDrawer() {
                     className="bg-white rounded-2xl p-4 shadow-sm border border-rose-100 flex gap-4"
                   >
                     <div className="w-16 h-16 bg-gradient-to-br from-[#F5E6DA] to-[#FDEEE4] rounded-xl flex items-center justify-center flex-shrink-0 text-2xl overflow-hidden">
-                      {item.thumbnail ? <img src={item.thumbnail} alt="" className="w-full h-full object-cover" /> : '🧸'}
+                      {item.thumbnail ? <img src={resolveImageUrl(item.thumbnail)} alt="" className="w-full h-full object-cover" /> : '🧸'}
                     </div>
 
                     {/* Info */}

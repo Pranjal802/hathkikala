@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useStore } from '../../context/StoreContext.jsx';
 import { api } from '../../services/api.js';
+import { resolveImageUrl } from '../../utils/resolveImageUrl.js';
 import {
   X, LayoutDashboard, Package, ShoppingBag, FolderTree, Tag, Megaphone, Users,
   Plus, Edit2, Trash2, CheckCircle, AlertTriangle, ArrowUpRight, Search, Eye, RefreshCw, Truck,
@@ -890,7 +891,7 @@ export default function AdminPanel() {
                         <tr key={prod.id} className="hover:bg-rose-50/20 transition">
                           <td className="p-4 flex items-center gap-3">
                             <div className="w-12 h-12 bg-rose-100 rounded-2xl flex items-center justify-center text-xl overflow-hidden shrink-0">
-                              {prod.thumbnail ? <img src={prod.thumbnail} alt="" className="w-full h-full object-cover" /> : prod.emoji || '📦'}
+                              {prod.thumbnail ? <img src={resolveImageUrl(prod.thumbnail)} alt="" className="w-full h-full object-cover" /> : prod.emoji || '📦'}
                             </div>
                             <div>
                               <p className="font-bold text-gray-800">{prod.name}</p>
@@ -1603,7 +1604,7 @@ export default function AdminPanel() {
                   <div className="grid grid-cols-4 gap-2 mt-3">
                     {(productForm.images || []).map((img, idx) => (
                       <div key={idx} className="relative group w-full h-16 rounded-xl overflow-hidden border border-rose-200 bg-gray-100">
-                        <img src={img.url} alt="Product" className="w-full h-full object-cover" />
+                        <img src={resolveImageUrl(img.url)} alt="Product" className="w-full h-full object-cover" />
                         <button
                           type="button"
                           onClick={() => {
@@ -1713,7 +1714,7 @@ export default function AdminPanel() {
                   <div className="grid grid-cols-4 gap-2 mb-3">
                     {(editingProduct.images || []).map((img) => (
                       <div key={img.id || img._id || img.url} className="relative group w-full h-16 rounded-xl overflow-hidden border border-rose-200 bg-gray-100">
-                        <img src={img.url} alt="Product" className="w-full h-full object-cover" />
+                        <img src={resolveImageUrl(img.url)} alt="Product" className="w-full h-full object-cover" />
                         {(img.id || img._id) && (img.id !== 'thumb') && (
                           <button
                             type="button"

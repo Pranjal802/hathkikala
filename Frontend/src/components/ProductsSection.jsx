@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { Heart, ShoppingCart, Star, Sparkles, Eye } from "lucide-react";
 import { useStore } from "../context/StoreContext.jsx";
+import { resolveImageUrl } from "../utils/resolveImageUrl.js";
 
 export default function ProductsSection() {
   const {
@@ -99,7 +100,7 @@ export default function ProductsSection() {
                 <div className="relative h-72 overflow-hidden bg-[#F7F2EB] flex items-center justify-center">
                   {product.thumbnail ? (
                     <img
-                      src={product.thumbnail}
+                      src={resolveImageUrl(product.thumbnail)}
                       alt={product.name}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                     />
