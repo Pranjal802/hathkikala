@@ -24,8 +24,8 @@ const OrderItemSchema = new Schema<IOrderItem>({
 // Embedded: 1-to-1 with the order, always read together, no reason
 // to query payments independently of their order in this app.
 export interface IPayment {
-  provider: 'cod' | 'razorpay' | 'stripe' | 'paypal';
-  providerOrderId?: string; // e.g. Razorpay order_id / Stripe payment_intent id
+  provider: 'cod' | 'online' | 'cashfree' | 'razorpay' | 'stripe' | 'paypal';
+  providerOrderId?: string; // e.g. Cashfree / Razorpay order_id / Stripe payment_intent id
   providerPaymentId?: string; // set once payment succeeds
   status: 'pending' | 'paid' | 'failed' | 'refunded';
   amount: number;
@@ -34,7 +34,7 @@ export interface IPayment {
 }
 
 const PaymentSchema = new Schema<IPayment>({
-  provider: { type: String, enum: ['cod', 'razorpay', 'stripe', 'paypal'], required: true },
+  provider: { type: String, enum: ['cod', 'online', 'cashfree', 'razorpay', 'stripe', 'paypal'], required: true },
   providerOrderId: { type: String },
   providerPaymentId: { type: String },
   status: { type: String, enum: ['pending', 'paid', 'failed', 'refunded'], default: 'pending' },
@@ -104,7 +104,10 @@ export interface IOrder {
 
   trackingNumber?: string;
   courierName?: string;
+  trackingUrl?: string;
   customizationNotes?: string;
+
+  staffNotes?: Array<{ note: string; author: string; createdAt: Date }>;
 
   statusHistory: IStatusHistoryEntry[]; // small audit trail, always read with the order
 
@@ -134,7 +137,14 @@ const orderSchema = new Schema<IOrder>({
 
   trackingNumber: { type: String },
   courierName: { type: String },
+  trackingUrl: { type: String },
   customizationNotes: { type: String },
+
+  staffNotes: [{
+    note: { type: String, required: true },
+    author: { type: String, default: 'Admin Staff' },
+    createdAt: { type: Date, default: Date.now }
+  }],
 
   statusHistory: [StatusHistorySchema],
 

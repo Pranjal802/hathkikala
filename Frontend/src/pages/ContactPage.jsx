@@ -180,7 +180,7 @@ export default function ContactPage() {
                     <select
                       value={form.subject}
                       onChange={(e) => setForm({ ...form, subject: e.target.value })}
-                      className="w-full bg-[#F5E6DA]/50 px-4 py-3 rounded-xl font-sans text-xs font-bold text-[#3E2C23] focus:outline-none focus:ring-2 focus:ring-[#C97C5D]"
+                      className="w-full bg-[#F5E6DA]/50 pl-4 pr-10 py-3 rounded-xl font-sans text-xs font-bold text-[#3E2C23] focus:outline-none focus:ring-2 focus:ring-[#C97C5D]"
                     >
                       <option value="Custom Order Request">Custom Order Request</option>
                       <option value="Bulk Gift Hampers Inquiry">Bulk Gift Hampers Inquiry</option>

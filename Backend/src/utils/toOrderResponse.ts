@@ -14,8 +14,10 @@ export function toOrderResponse(order: OrderDocument) {
     status: order.status,
     trackingNumber: order.trackingNumber ?? null,
     courierName: order.courierName ?? null,
+    trackingUrl: order.trackingUrl ?? null,
     customizationNotes: order.customizationNotes ?? null,
     cancelReason: order.cancelReason ?? null,
+    staffNotes: order.staffNotes ?? [],
     items: order.items.map((item) => ({
       productId: item.productId.toString(),
       productName: item.productName,
@@ -28,14 +30,18 @@ export function toOrderResponse(order: OrderDocument) {
     shippingAddress: order.shippingAddress,
     payment: {
       provider: order.payment.provider,
+      providerOrderId: order.payment.providerOrderId ?? null,
+      providerPaymentId: order.payment.providerPaymentId ?? null,
       status: order.payment.status,
       amount: order.payment.amount,
       currency: order.payment.currency,
+      paidAt: order.payment.paidAt ?? null,
     },
     subtotal: order.subtotal,
     shippingFee: order.shippingFee,
     totalAmount: order.totalAmount,
     statusHistory: order.statusHistory,
     createdAt: order.createdAt,
+    updatedAt: order.updatedAt,
   };
 }

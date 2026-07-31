@@ -32,6 +32,8 @@ export const api = {
   // Auth
   login: (credentials) => request('/auth/login', { method: 'POST', body: JSON.stringify(credentials) }),
   signup: (userData) => request('/auth/register', { method: 'POST', body: JSON.stringify(userData) }),
+  verifyOtp: (email, otp) => request('/auth/verify-otp', { method: 'POST', body: JSON.stringify({ email, otp }) }),
+  resendOtp: (email) => request('/auth/resend-otp', { method: 'POST', body: JSON.stringify({ email }) }),
   logout: () => request('/auth/logout', { method: 'POST' }),
   getAccount: () => request('/account/me'),
 
@@ -85,6 +87,11 @@ export const api = {
       method: 'PATCH',
       body: JSON.stringify(data),
     }),
+  addOrderStaffNote: (orderId, note) =>
+    request(`/orders/admin/${orderId}/notes`, {
+      method: 'POST',
+      body: JSON.stringify({ note }),
+    }),
   getAdminProducts: (params = {}) => {
     const query = new URLSearchParams(params).toString();
     return request(`/products/admin/all${query ? `?${query}` : ''}`);
@@ -118,5 +125,42 @@ export const api = {
   updateReview: (id, data) => request(`/admin/reviews/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
   getSupportTickets: () => request('/admin/support'),
   updateSupportTicket: (id, data) => request(`/admin/support/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
-  submitSupportTicket: (data) => request('/admin/support', { method: 'POST', body: JSON.stringify(data) }),
+  // Cloudinary & Image Upload APIs
+  uploadProductImages: (productId, formData) =>
+    request(`/products/${productId}/images`, {
+      method: 'POST',
+      body: formData,
+    }),
+  deleteProductImage: (productId, imageId) =>
+    request(`/products/${productId}/images/${imageId}`, {
+      method: 'DELETE',
+    }),
+  uploadSingleImage: (formData) =>
+    request('/upload/single', {
+      method: 'POST',
+      body: formData,
+    }),
+  uploadMultipleImages: (formData) =>
+    request('/upload/multiple', {
+      method: 'POST',
+      body: formData,
+    }),
+  deleteImage: (publicId) =>
+    request('/upload', {
+      method: 'DELETE',
+      body: JSON.stringify({ publicId }),
+    }),
+  // Cashfree Payment Gateway APIs
+  createCashfreeOrder: (orderId) =>
+    request('/payments/cashfree/create-order', {
+      method: 'POST',
+      body: JSON.stringify({ orderId }),
+    }),
+  verifyCashfreePayment: (orderId) =>
+    request('/payments/cashfree/verify', {
+      method: 'POST',
+      body: JSON.stringify({ orderId }),
+    }),
 };
+
+

@@ -1,13 +1,18 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Star, Heart, ShoppingCart, Check, HandHeart } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export default function QuickViewModal() {
   const { quickViewProduct: product, setQuickViewProduct, addToCart, toggleWishlist, isWishlisted } = useStore();
   const [qty, setQty] = useState(1);
   const [selectedVariantSku, setSelectedVariantSku] = useState(null);
   const [added, setAdded] = useState(false);
+
+  useEffect(() => {
+    setQty(1);
+    setSelectedVariantSku(null);
+  }, [product?.id]);
 
   if (!product) return null;
 
@@ -144,13 +149,13 @@ export default function QuickViewModal() {
                         id="quickview-add-btn"
                         onClick={handleAdd}
                         whileTap={{ scale: 0.97 }}
-                        className={`flex-1 flex items-center justify-center gap-2 py-3.5 rounded-2xl font-sans font-bold text-sm transition-all shadow-md ${
+                        className={`flex-1 flex items-center justify-center gap-2.5 px-5 py-3.5 rounded-2xl font-sans font-bold text-sm transition-all shadow-md ${
                           added
                             ? 'bg-[#9CAF88] text-white'
                             : 'bg-gradient-to-r from-[#C97C5D] to-[#D8A7B1] text-white'
                         }`}
                       >
-                        {added ? <Check size={16} /> : <ShoppingCart size={16} />}
+                        {added ? <Check size={18} className="shrink-0" /> : <ShoppingCart size={18} className="shrink-0" />}
                         {added ? 'Added to Cart!' : `Add to Cart (₹${currentPrice * qty})`}
                       </motion.button>
 

@@ -154,7 +154,7 @@ export default function ProductsPage() {
                 <select
                   value={selectedCatId}
                   onChange={(e) => setSelectedCatId(e.target.value)}
-                  className="w-full bg-[#F5E6DA]/50 px-3 py-2.5 rounded-xl font-sans text-xs font-bold text-[#3E2C23] focus:outline-none focus:ring-2 focus:ring-[#C97C5D]"
+                  className="w-full bg-[#F5E6DA]/50 pl-3 pr-8 py-2.5 rounded-xl font-sans text-xs font-bold text-[#3E2C23] focus:outline-none focus:ring-2 focus:ring-[#C97C5D]"
                 >
                   <option value="all">All Categories ({products.length})</option>
                   {categories.map((cat) => (
@@ -245,7 +245,7 @@ export default function ProductsPage() {
                   <select
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value)}
-                    className="bg-[#F5E6DA]/50 px-3 py-1.5 rounded-xl font-sans text-xs font-bold text-[#3E2C23] focus:outline-none focus:ring-2 focus:ring-[#C97C5D]"
+                    className="bg-[#F5E6DA]/50 pl-3 pr-8 py-1.5 rounded-xl font-sans text-xs font-bold text-[#3E2C23] focus:outline-none focus:ring-2 focus:ring-[#C97C5D]"
                   >
                     <option value="featured">Featured Artisanal</option>
                     <option value="price_asc">Price: Low to High</option>
@@ -358,8 +358,8 @@ export default function ProductsPage() {
                           </span>
                         </div>
 
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-baseline gap-2">
+                        <div className="flex items-center justify-between gap-2 pt-1">
+                          <div className="flex items-baseline gap-1.5">
                             <span className="font-sans text-xl font-extrabold text-[#C97C5D]">
                               ₹{prod.discountPrice || prod.basePrice}
                             </span>
@@ -370,12 +370,21 @@ export default function ProductsPage() {
                             )}
                           </div>
 
-                          <button
-                            onClick={() => addToCart(prod)}
-                            className="bg-[#3E2C23] hover:bg-[#C97C5D] text-white p-2.5 rounded-xl transition shadow flex items-center justify-center"
-                          >
-                            <ShoppingCart size={16} />
-                          </button>
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              onClick={() => setQuickViewProduct(prod)}
+                              className="bg-[#F5E6DA] hover:bg-[#C97C5D] text-[#3E2C23] hover:text-white p-2.5 rounded-xl transition shadow-sm flex items-center justify-center"
+                              title="Quick View"
+                            >
+                              <Eye size={16} />
+                            </button>
+                            <button
+                              onClick={() => addToCart(prod)}
+                              className="bg-[#3E2C23] hover:bg-[#C97C5D] text-white px-3 py-2.5 rounded-xl transition shadow-sm flex items-center justify-center gap-1.5 text-xs font-bold"
+                            >
+                              <ShoppingCart size={16} /> Add
+                            </button>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -408,16 +417,24 @@ export default function ProductsPage() {
                       </div>
                     </div>
 
-                    <div className="text-right shrink-0 space-y-2">
+                    <div className="text-right shrink-0 space-y-3">
                       <div className="font-sans text-2xl font-extrabold text-[#C97C5D]">
                         ₹{prod.discountPrice || prod.basePrice}
                       </div>
-                      <button
-                        onClick={() => addToCart(prod)}
-                        className="px-5 py-2.5 bg-[#C97C5D] text-white font-bold text-xs rounded-xl shadow hover:bg-[#b0674a] transition flex items-center gap-2"
-                      >
-                        <ShoppingCart size={15} /> Add to Cart
-                      </button>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => setQuickViewProduct(prod)}
+                          className="px-4 py-2.5 bg-rose-50 text-[#C97C5D] hover:bg-rose-100 font-bold text-xs rounded-xl transition flex items-center gap-1.5"
+                        >
+                          <Eye size={15} /> Quick View
+                        </button>
+                        <button
+                          onClick={() => addToCart(prod)}
+                          className="px-5 py-2.5 bg-[#C97C5D] text-white font-bold text-xs rounded-xl shadow hover:bg-[#b0674a] transition flex items-center gap-2"
+                        >
+                          <ShoppingCart size={15} /> Add to Cart
+                        </button>
+                      </div>
                     </div>
                   </div>
                 ))}

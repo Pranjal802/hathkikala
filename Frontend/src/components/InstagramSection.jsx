@@ -78,8 +78,10 @@ export default function InstagramSection() {
           className="text-center mt-8"
         >
           <a
-            href="#"
-            className="inline-flex items-center gap-2 bg-white border-2 border-[#D8A7B1] text-[#3E2C23] px-7 py-3.5 rounded-full font-sans font-semibold hover:bg-[#D8A7B1] hover:text-white transition-all shadow-soft hover:shadow-card"
+            href="https://www.instagram.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 bg-white border-2 border-[#D8A7B1] text-[#3E2C23] px-7 py-3.5 rounded-full font-sans font-semibold hover:bg-[#D8A7B1] hover:text-white transition-all shadow-soft hover:shadow-card cursor-pointer"
           >
             <Camera size={17} />
             Follow on Instagram

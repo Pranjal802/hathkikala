@@ -1,15 +1,19 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Mail, Lock, User, Eye, EyeOff, Sparkles, Heart, ShieldAlert, ShoppingBag } from 'lucide-react';
+import { X, Mail, Lock, User, Eye, EyeOff, Sparkles, Heart, ShieldCheck, RefreshCw } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
+import { api } from '../services/api';
 
 export default function LoginModal() {
-  const { loginOpen, setLoginOpen, login, signup, showNotification } = useStore();
-  const [tab, setTab] = useState('login'); // 'login' | 'register'
+  const { loginOpen, setLoginOpen, login, signup, verifyOtp, showNotification, setUser } = useStore();
+  const [tab, setTab] = useState('login'); // 'login' | 'register' | 'verify-otp'
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [otpCode, setOtpCode] = useState('');
+  const [unverifiedEmail, setUnverifiedEmail] = useState('');
 
   const [form, setForm] = useState({
+    name: '',
     email: '',
     phone: '',
     password: '',
@@ -23,16 +27,57 @@ export default function LoginModal() {
     try {
       if (tab === 'login') {
         await login(form.email, form.password);
-      } else {
-        await signup({
+      } else if (tab === 'register') {
+        const res = await signup({
           name: form.name || form.email.split('@')[0],
           email: form.email,
           phone: form.phone || '9876543210',
           password: form.password,
         });
+
+        if (res?.requiresOtp) {
+          setUnverifiedEmail(res.email || form.email);
+          setTab('verify-otp');
+          showNotification(res.message || 'OTP sent to your email!', 'info');
+        }
       }
     } catch (err) {
-      showNotification(err.message || 'Authentication failed', 'error');
+      if (err.message && err.message.includes('unverified')) {
+        setUnverifiedEmail(form.email);
+        setTab('verify-otp');
+        showNotification(err.message, 'info');
+      } else {
+        showNotification(err.message || 'Authentication failed', 'error');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyOtp = async (e) => {
+    e.preventDefault();
+    if (!otpCode || otpCode.length < 4) {
+      showNotification('Please enter a valid 6-digit OTP code', 'error');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await verifyOtp(unverifiedEmail, otpCode);
+    } catch (err) {
+      showNotification(err.message || 'OTP Verification failed', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResendOtp = async () => {
+    setLoading(true);
+    try {
+      const res = await api.resendOtp(unverifiedEmail);
+      showNotification(res.message || `A new OTP has been sent to ${unverifiedEmail}`);
+    } catch (err) {
+      showNotification(err.message || 'Failed to resend OTP', 'error');
     } finally {
       setLoading(false);
     }
@@ -69,93 +114,165 @@ export default function LoginModal() {
                 </button>
                 <div className="relative">
                   <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-2">
-                    <Sparkles size={22} className="text-white" />
+                    {tab === 'verify-otp' ? (
+                      <ShieldCheck size={24} className="text-white" />
+                    ) : (
+                      <Sparkles size={22} className="text-white" />
+                    )}
                   </div>
                   <h2 className="font-serif text-2xl font-bold text-white mb-1 flex items-center justify-center gap-2">
-                    {tab === 'login' ? (
+                    {tab === 'verify-otp' ? (
+                      <>Verify Email OTP ✉️</>
+                    ) : tab === 'login' ? (
                       <><Sparkles size={20} /> Welcome Back!</>
                     ) : (
                       <><Heart size={20} className="fill-white" /> Join Our Family</>
                     )}
                   </h2>
                   <p className="font-sans text-xs text-white/90">
-                    {tab === 'login' ? 'Sign in to access your cart & orders' : 'Create your handmade account'}
+                    {tab === 'verify-otp'
+                      ? `Code sent to ${unverifiedEmail}`
+                      : tab === 'login'
+                      ? 'Sign in to access your cart & orders'
+                      : 'Create your handmade account'}
                   </p>
                 </div>
               </div>
 
-              {/* Tab switcher */}
-              <div className="flex mx-6 mt-4 bg-[#F5E6DA] rounded-2xl p-1">
-                {[['login', 'Sign In'], ['register', 'Register']].map(([val, label]) => (
-                  <button
-                    key={val}
-                    onClick={() => setTab(val)}
-                    className={`flex-1 py-2 rounded-xl font-sans text-xs font-bold transition-all duration-300 ${
-                      tab === val
-                        ? 'bg-white text-[#C97C5D] shadow-sm'
-                        : 'text-[#5C4033]/60 hover:text-[#5C4033]'
-                    }`}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
+              {/* Tab switcher (Only shown for Login/Register modes) */}
+              {tab !== 'verify-otp' && (
+                <div className="flex mx-6 mt-4 bg-[#F5E6DA] rounded-2xl p-1">
+                  {[['login', 'Sign In'], ['register', 'Register']].map(([val, label]) => (
+                    <button
+                      key={val}
+                      onClick={() => setTab(val)}
+                      className={`flex-1 py-2 rounded-xl font-sans text-xs font-bold transition-all duration-300 ${
+                        tab === val
+                          ? 'bg-white text-[#C97C5D] shadow-sm'
+                          : 'text-[#5C4033]/60 hover:text-[#5C4033]'
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              )}
 
-              {/* Form */}
-              <form className="px-6 py-5 space-y-3" onSubmit={handleSubmit}>
-                {tab === 'register' && (
-                  <div className="relative">
-                    <User size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#D8A7B1]" />
+              {/* Form Views */}
+              {tab === 'verify-otp' ? (
+                <form className="px-6 py-6 space-y-4 text-center" onSubmit={handleVerifyOtp}>
+                  <div className="space-y-1">
+                    <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider">
+                      Enter 6-Digit OTP Code
+                    </label>
                     <input
-                      type="tel"
-                      placeholder="Phone Number"
-                      value={form.phone}
-                      onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                      type="text"
+                      maxLength={6}
+                      placeholder="e.g. 849201"
+                      value={otpCode}
+                      onChange={(e) => setOtpCode(e.target.value.replace(/[^0-9]/g, ''))}
+                      required
+                      className="w-full bg-[#F5E6DA] text-center tracking-widest text-2xl font-mono py-3.5 rounded-2xl border-2 border-rose-200 text-[#3E2C23] focus:outline-none focus:border-[#C97C5D]"
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={loading || otpCode.length < 6}
+                    className="w-full bg-gradient-to-r from-[#C97C5D] to-[#D8A7B1] text-white py-3.5 rounded-2xl font-sans font-bold shadow-md hover:shadow-lg transition-all disabled:opacity-50"
+                  >
+                    {loading ? 'Verifying OTP...' : 'Verify Email & Complete Login'}
+                  </button>
+
+                  <div className="flex items-center justify-between text-xs pt-2">
+                    <button
+                      type="button"
+                      onClick={handleResendOtp}
+                      disabled={loading}
+                      className="text-[#C97C5D] font-bold hover:underline flex items-center gap-1"
+                    >
+                      <RefreshCw size={13} /> Resend OTP
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setTab('register')}
+                      className="text-gray-500 hover:text-gray-700"
+                    >
+                      Change Email
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                <form className="px-6 py-5 space-y-3" onSubmit={handleSubmit}>
+                  {tab === 'register' && (
+                    <>
+                      <div className="relative">
+                        <User size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#D8A7B1]" />
+                        <input
+                          type="text"
+                          placeholder="Full Name"
+                          value={form.name}
+                          onChange={(e) => setForm({ ...form, name: e.target.value })}
+                          required
+                          className="w-full bg-[#F5E6DA] pl-11 pr-4 py-3 rounded-2xl font-sans text-sm text-[#3E2C23] placeholder-[#5C4033]/40 focus:outline-none focus:ring-2 focus:ring-[#D8A7B1]"
+                        />
+                      </div>
+
+                      <div className="relative">
+                        <User size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#D8A7B1]" />
+                        <input
+                          type="tel"
+                          placeholder="Phone Number"
+                          value={form.phone}
+                          onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                          required
+                          className="w-full bg-[#F5E6DA] pl-11 pr-4 py-3 rounded-2xl font-sans text-sm text-[#3E2C23] placeholder-[#5C4033]/40 focus:outline-none focus:ring-2 focus:ring-[#D8A7B1]"
+                        />
+                      </div>
+                    </>
+                  )}
+
+                  <div className="relative">
+                    <Mail size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#D8A7B1]" />
+                    <input
+                      type="email"
+                      placeholder="Email address"
+                      value={form.email}
+                      onChange={(e) => setForm({ ...form, email: e.target.value })}
                       required
                       className="w-full bg-[#F5E6DA] pl-11 pr-4 py-3 rounded-2xl font-sans text-sm text-[#3E2C23] placeholder-[#5C4033]/40 focus:outline-none focus:ring-2 focus:ring-[#D8A7B1]"
                     />
                   </div>
-                )}
 
-                <div className="relative">
-                  <Mail size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#D8A7B1]" />
-                  <input
-                    type="email"
-                    placeholder="Email address"
-                    value={form.email}
-                    onChange={(e) => setForm({ ...form, email: e.target.value })}
-                    required
-                    className="w-full bg-[#F5E6DA] pl-11 pr-4 py-3 rounded-2xl font-sans text-sm text-[#3E2C23] placeholder-[#5C4033]/40 focus:outline-none focus:ring-2 focus:ring-[#D8A7B1]"
-                  />
-                </div>
+                  <div className="relative">
+                    <Lock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#D8A7B1]" />
+                    <input
+                      type={showPass ? 'text' : 'password'}
+                      placeholder="Password"
+                      value={form.password}
+                      onChange={(e) => setForm({ ...form, password: e.target.value })}
+                      required
+                      className="w-full bg-[#F5E6DA] pl-11 pr-11 py-3 rounded-2xl font-sans text-sm text-[#3E2C23] placeholder-[#5C4033]/40 focus:outline-none focus:ring-2 focus:ring-[#D8A7B1]"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPass((v) => !v)}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-[#D8A7B1] hover:text-[#C97C5D] transition-colors"
+                    >
+                      {showPass ? <EyeOff size={15} /> : <Eye size={15} />}
+                    </button>
+                  </div>
 
-                <div className="relative">
-                  <Lock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#D8A7B1]" />
-                  <input
-                    type={showPass ? 'text' : 'password'}
-                    placeholder="Password"
-                    value={form.password}
-                    onChange={(e) => setForm({ ...form, password: e.target.value })}
-                    required
-                    className="w-full bg-[#F5E6DA] pl-11 pr-11 py-3 rounded-2xl font-sans text-sm text-[#3E2C23] placeholder-[#5C4033]/40 focus:outline-none focus:ring-2 focus:ring-[#D8A7B1]"
-                  />
                   <button
-                    type="button"
-                    onClick={() => setShowPass((v) => !v)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-[#D8A7B1] hover:text-[#C97C5D] transition-colors"
+                    type="submit"
+                    disabled={loading}
+                    className="w-full bg-gradient-to-r from-[#C97C5D] to-[#D8A7B1] text-white py-3.5 rounded-2xl font-sans font-bold shadow-md hover:shadow-lg transition-all disabled:opacity-50 mt-2"
                   >
-                    {showPass ? <EyeOff size={15} /> : <Eye size={15} />}
+                    {loading ? 'Authenticating...' : tab === 'login' ? 'Sign In' : 'Create Account & Get OTP'}
                   </button>
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full bg-gradient-to-r from-[#C97C5D] to-[#D8A7B1] text-white py-3.5 rounded-2xl font-sans font-bold shadow-md hover:shadow-lg transition-all disabled:opacity-50 mt-2"
-                >
-                  {loading ? 'Authenticating...' : tab === 'login' ? 'Sign In' : 'Create Account'}
-                </button>
-              </form>
+                </form>
+              )}
             </div>
           </motion.div>
         </>

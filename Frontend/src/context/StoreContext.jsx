@@ -110,12 +110,22 @@ export function StoreProvider({ children }) {
 
   const signup = async (userData) => {
     const res = await api.signup(userData);
-    if (res.success) {
+    if (res.success && res.data?.user) {
       setUser(res.data.user);
       showNotification(`Welcome to Hath Ki Kala! 🌸`);
       setLoginOpen(false);
-      return res;
     }
+    return res;
+  };
+
+  const verifyOtp = async (email, otp) => {
+    const res = await api.verifyOtp(email, otp);
+    if (res.success && res.data?.user) {
+      setUser(res.data.user);
+      showNotification(`Email Verified Successfully! 🌸 Welcome to Hath Ki Kala!`);
+      setLoginOpen(false);
+    }
+    return res;
   };
 
   const logout = async () => {
@@ -228,7 +238,7 @@ export function StoreProvider({ children }) {
   const isWishlisted = (id) => wishlist.some((i) => i.id === id);
 
   // Fetch Customer Orders
-  const fetchMyOrders = async () => {
+  const fetchMyOrders = async (shouldOpenModal = false) => {
     if (!user) {
       setLoginOpen(true);
       return;
@@ -237,7 +247,9 @@ export function StoreProvider({ children }) {
       const res = await api.getMyOrders();
       if (res.success) {
         setUserOrders(res.data.orders);
-        setOrdersOpen(true);
+        if (shouldOpenModal) {
+          setOrdersOpen(true);
+        }
       }
     } catch (err) {
       showNotification(err.message, 'error');
@@ -254,6 +266,7 @@ export function StoreProvider({ children }) {
     <StoreContext.Provider
       value={{
         user,
+        setUser,
         cart,
         setCart,
         wishlist,
@@ -277,7 +290,7 @@ export function StoreProvider({ children }) {
         userOrders, setUserOrders, fetchMyOrders,
 
         showNotification,
-        login, signup, logout,
+        login, signup, verifyOtp, logout,
         addToCart, updateCartQty, removeFromCart,
         toggleWishlist, isWishlisted,
         fetchProducts,

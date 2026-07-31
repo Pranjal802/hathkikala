@@ -5,6 +5,7 @@ import {
   getOrderById,
   listAllOrdersAdmin,
   updateOrderStatusAdmin,
+  addOrderStaffNoteAdmin,
   getOrderStatsAdmin,
 } from '../controllers/OrderController.js';
 import { protect } from '../middleware/protect.js';
@@ -21,6 +22,7 @@ router.use(protect); // every order route requires a logged-in user
 router.get('/admin/all', restrictTo('admin'), listAllOrdersAdmin);
 router.get('/admin/stats', restrictTo('admin'), getOrderStatsAdmin);
 router.patch('/admin/:id/status', restrictTo('admin'), updateOrderStatusAdmin);
+router.post('/admin/:id/notes', restrictTo('admin'), addOrderStaffNoteAdmin);
 
 // Customer routes
 router.post('/', validate(createOrderSchema), createOrder);

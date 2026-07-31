@@ -7,18 +7,32 @@ export interface CloudinaryUploadResult {
   publicId: string;
 }
 
-// Wraps Cloudinary's upload_stream (callback API) in a Promise so callers
-// can just `await` it, and pushes the in-memory multer buffer through it.
+/**
+ * Uploads a file buffer directly to Cloudinary using streams.
+ * @param buffer - File buffer from multer memory storage
+ * @param folder - Destination folder in Cloudinary storage
+ */
 export function uploadBufferToCloudinary(
   buffer: Buffer,
   folder = 'handmade/products'
 ): Promise<CloudinaryUploadResult> {
   return new Promise((resolve, reject) => {
+    const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
+    const apiKey = process.env.CLOUDINARY_API_KEY;
+    const apiSecret = process.env.CLOUDINARY_API_SECRET;
+
+    if (!cloudName || !apiKey || !apiSecret) {
+      return reject(
+        new AppError('Cloudinary credentials (CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET) are missing in .env', 500)
+      );
+    }
+
     const uploadStream = cloudinary.uploader.upload_stream(
       { folder, resource_type: 'image' },
       (err, result) => {
         if (err || !result) {
-          return reject(new AppError('Image upload failed', 502));
+          console.error('Cloudinary Upload Stream Error:', err);
+          return reject(new AppError(`Image upload failed: ${err?.message || 'Unknown error'}`, 502));
         }
         resolve({ url: result.secure_url, publicId: result.public_id });
       }
@@ -27,13 +41,16 @@ export function uploadBufferToCloudinary(
   });
 }
 
-// Best-effort cleanup - if this fails we still want the DB-side removal
-// (e.g. deleting the product's image entry) to succeed, so callers should
-// not let a rejection here block the main operation.
+/**
+ * Deletes an image from Cloudinary by its public ID.
+ * Best-effort cleanup so failure won't block main operation.
+ */
 export async function deleteFromCloudinary(publicId: string): Promise<void> {
+  if (!publicId) return;
   try {
     await cloudinary.uploader.destroy(publicId);
   } catch (err) {
     console.error('Cloudinary delete failed for', publicId, err);
   }
 }
+

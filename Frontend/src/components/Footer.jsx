@@ -128,7 +128,7 @@ export default function Footer() {
                 <div>
                   <div className="font-sans text-xs text-white/40 mb-0.5 font-light">Based in</div>
                   <span className="font-sans text-sm text-white/70 font-light flex items-center gap-1.5">
-                    <MapPin size={12} className="text-[#A8C5B8]" /> India
+                    <MapPin size={12} className="text-[#A8C5B8]" /> Mumbai, Maharashtra, India
                   </span>
                 </div>
               </li>

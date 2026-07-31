@@ -6,6 +6,7 @@ import Order, { type IOrderItem } from '../models/Order.js';
 import { AppError } from '../utils/AppError.js';
 import { toOrderResponse } from '../utils/toOrderResponse.js';
 import type { CreateOrderDto } from '../dtos/OrderDtos.js';
+import { sendOrderConfirmationEmail, sendShippingUpdateEmail } from '../services/emailService.js';
 
 // POST /api/orders
 // Turns the current user's cart into an Order. The local fallback DB used in
@@ -163,7 +164,12 @@ export async function createOrder(req: Request, res: Response) {
     cart.items = [] as typeof cart.items;
     await cart.save();
 
-    return res.status(201).json({ success: true, data: { order: toOrderResponse(createdOrder) } });
+    const formattedOrder = toOrderResponse(createdOrder);
+    sendOrderConfirmationEmail(req.user!.email, formattedOrder).catch((err) =>
+      console.error('Order confirmation email error:', err)
+    );
+
+    return res.status(201).json({ success: true, data: { order: formattedOrder } });
   } catch (error) {
     if (appliedDecrements.length > 0) {
       await Promise.all(
@@ -223,10 +229,10 @@ export async function listAllOrdersAdmin(req: Request, res: Response) {
   });
 }
 
-// PATCH /api/orders/admin/:id/status - Admin update status & tracking
+// PATCH /api/orders/admin/:id/status - Admin update status, tracking & payment status
 export async function updateOrderStatusAdmin(req: Request, res: Response) {
   const { id } = req.params;
-  const { status, trackingNumber, courierName, customizationNotes, note } = req.body;
+  const { status, trackingNumber, courierName, trackingUrl, customizationNotes, note, paymentStatus, cancelReason } = req.body;
 
   const order = await Order.findById(id);
   if (!order) {
@@ -234,22 +240,87 @@ export async function updateOrderStatusAdmin(req: Request, res: Response) {
   }
 
   if (status) {
-    order.status = status;
+    order.status = status as any;
     order.statusHistory.push({
       status,
       changedAt: new Date(),
       note: note || `Status updated to ${status}`,
     });
+
+    if (status === 'paid' || status === 'delivered') {
+      if (order.payment.status !== 'paid') {
+        order.payment.status = 'paid';
+        order.payment.paidAt = new Date();
+      }
+    } else if (status === 'cancelled' || status === 'refunded') {
+      if (cancelReason) order.cancelReason = cancelReason;
+      if (status === 'refunded') order.payment.status = 'refunded';
+    }
   }
 
-  if (trackingNumber !== undefined) order.trackingNumber = trackingNumber;
+  if (paymentStatus) {
+    order.payment.status = paymentStatus;
+    if (paymentStatus === 'paid' && !order.payment.paidAt) {
+      order.payment.paidAt = new Date();
+    }
+  }
+
+  if (trackingNumber !== undefined) {
+    order.trackingNumber = trackingNumber;
+    if (trackingNumber && ['pending', 'placed', 'confirmed', 'processing'].includes(order.status)) {
+      order.status = 'shipped';
+      order.statusHistory.push({
+        status: 'shipped',
+        changedAt: new Date(),
+        note: `Auto-marked as Shipped (Tracking: ${trackingNumber})`,
+      });
+    }
+  }
   if (courierName !== undefined) order.courierName = courierName;
+  if (trackingUrl !== undefined) order.trackingUrl = trackingUrl;
   if (customizationNotes !== undefined) order.customizationNotes = customizationNotes;
+  if (cancelReason !== undefined) order.cancelReason = cancelReason;
+
+  await order.save();
+  const formattedOrder = toOrderResponse(order);
+
+  if (order.status === 'shipped' || trackingNumber) {
+    sendShippingUpdateEmail(req.user?.email || 'customer@hathkikala.com', formattedOrder).catch((err) =>
+      console.error('Shipping update email error:', err)
+    );
+  }
+
+  return res.status(200).json({
+    success: true,
+    message: 'Order updated successfully',
+    data: { order: formattedOrder },
+  });
+}
+
+// POST /api/orders/admin/:id/notes - Admin add staff note
+export async function addOrderStaffNoteAdmin(req: Request, res: Response) {
+  const { id } = req.params;
+  const { note } = req.body;
+  if (!note || !note.trim()) {
+    throw new AppError('Note content is required', 400);
+  }
+
+  const order = await Order.findById(id);
+  if (!order) {
+    throw new AppError('Order not found', 404);
+  }
+
+  if (!order.staffNotes) order.staffNotes = [];
+  order.staffNotes.push({
+    note: note.trim(),
+    author: req.user?.name || req.user?.email || 'Admin Staff',
+    createdAt: new Date(),
+  });
 
   await order.save();
   return res.status(200).json({
     success: true,
-    message: 'Order status updated successfully',
+    message: 'Staff note added',
     data: { order: toOrderResponse(order) },
   });
 }

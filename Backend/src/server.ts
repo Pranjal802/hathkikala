@@ -2,6 +2,10 @@ import express from 'express';
 import mongoose from 'mongoose';
 import cors from 'cors';
 import dotenv from 'dotenv';
+
+// Initialize env vars before importing route modules that depend on configs
+dotenv.config();
+
 import { errorHandler } from './middleware/errorHandler.js';
 import cookieParser from 'cookie-parser';
 import passport from './config/jwt-strategy.js';
@@ -13,12 +17,12 @@ import cartRoutes from './routes/CartRoutes.js';
 import orderRoutes from './routes/OrderRoutes.js';
 import accountRoutes from './routes/AccountRoutes.js';
 import adminRoutes from './routes/AdminRoutes.js';
-
-dotenv.config();
+import uploadRoutes from './routes/UploadRoutes.js';
+import cashfreeRoutes from './routes/CashfreeRoutes.js';
 
 const app = express();
 app.use(cors({
-    origin: ['http://localhost:5173', 'http://127.0.0.1:5173', 'http://localhost:3000'],
+    origin: ['http://localhost:5173', 'http://127.0.0.1:5173', 'http://localhost:3000', 'http://localhost:5174'],
     credentials: true,
 }));
 app.use(express.json());
@@ -53,6 +57,8 @@ app.use("/api/cart", cartRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/account", accountRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/upload", uploadRoutes);
+app.use("/api/payments/cashfree", cashfreeRoutes);
 
 // Error handler must be registered LAST, after all routes
 app.use(errorHandler);

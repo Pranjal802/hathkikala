@@ -148,10 +148,13 @@ export default function TestimonialSection() {
           transition={{ delay: 0.3 }}
           className="grid grid-cols-1 sm:grid-cols-3 gap-8 mt-24 pt-16 border-t border-[#E8DDD0]"
         >
-          <div className="text-center bg-white rounded-[28px] py-10 shadow-md border border-[#EFE7DD]">
-            <div className="flex items-center justify-center gap-1 mb-3">
+          <div className="text-center bg-white rounded-[28px] py-8 px-6 shadow-md border border-[#EFE7DD] flex flex-col justify-center items-center">
+            <div className="text-5xl font-serif text-[#6B8E7F] mb-1 flex items-center justify-center gap-1.5">
+              4.9 <span className="text-xl font-sans text-[#6B8E7F]/60 font-bold">/ 5</span>
+            </div>
+            <div className="flex items-center justify-center gap-1 mb-2">
               {[...Array(5)].map((_, i) => (
-                <Star key={i} size={22} className="fill-[#6B8E7F] text-[#6B8E7F]" />
+                <Star key={i} size={16} className="fill-[#6B8E7F] text-[#6B8E7F]" />
               ))}
             </div>
             <p className="text-[#5A5A5A] text-lg">

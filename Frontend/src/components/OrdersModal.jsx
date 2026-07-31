@@ -1,8 +1,21 @@
+import { useEffect } from 'react';
 import { useStore } from '../context/StoreContext.jsx';
 import { X, Package, Clock, CheckCircle, Truck, AlertCircle } from 'lucide-react';
 
 export default function OrdersModal() {
   const { ordersOpen, setOrdersOpen, userOrders } = useStore();
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setOrdersOpen(false);
+      }
+    };
+    if (ordersOpen) {
+      window.addEventListener('keydown', handleKeyDown);
+    }
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [ordersOpen, setOrdersOpen]);
 
   if (!ordersOpen) return null;
 

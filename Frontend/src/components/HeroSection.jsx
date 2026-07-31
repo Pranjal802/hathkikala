@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { Link } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { Sparkles, ChevronLeft, ChevronRight } from "lucide-react";
 import greenBangles from "../assets/green_bangles.jpeg";
@@ -96,13 +97,25 @@ export default function HeroSection() {
             </p>
 
             <div className="flex flex-wrap gap-4">
-              <button className="px-8 py-3 bg-white text-[#6B8E7F] rounded-full font-semibold hover:bg-[#F5F1E8] transition-all duration-300 shadow-md">
+              <Link to="/products" className="px-8 py-3 bg-white text-[#6B8E7F] rounded-full font-semibold hover:bg-[#F5F1E8] transition-all duration-300 shadow-md inline-block">
                 Explore Collection
-              </button>
+              </Link>
 
-              <button className="px-8 py-3 border border-white text-white rounded-full hover:bg-white/10 transition-all duration-300">
+              <a
+                href="#products"
+                onClick={(e) => {
+                  e.preventDefault();
+                  const el = document.getElementById('products');
+                  if (el) {
+                    el.scrollIntoView({ behavior: 'smooth' });
+                  } else {
+                    window.location.href = '/products';
+                  }
+                }}
+                className="px-8 py-3 border border-white text-white rounded-full hover:bg-white/10 transition-all duration-300 inline-block cursor-pointer"
+              >
                 View Crafts
-              </button>
+              </a>
             </div>
 
             {/* Small Stats */}

@@ -69,6 +69,7 @@ export const updateProductSchema = z.object({
   isCustomizable: z.coerce.boolean().optional(),
   productionTimeDays: z.coerce.number().int().nonnegative().optional(),
   isActive: z.coerce.boolean().optional(),
+  images: z.array(productImageInputSchema).optional(),
 });
 export type UpdateProductDto = z.infer<typeof updateProductSchema>;
 

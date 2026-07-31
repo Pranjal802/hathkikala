@@ -153,12 +153,15 @@ export default function GallerySection() {
                       Handmade Collection
                     </span>
 
-                    <motion.div
-                      whileHover={{ scale: 1.1 }}
-                      className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-xl"
+                    <a
+                      href="https://www.instagram.com"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-xl hover:scale-110 transition-transform cursor-pointer"
+                      title="View on Instagram"
                     >
                       <Camera size={20} className="text-[#6B8E7F]" />
-                    </motion.div>
+                    </a>
                   </div>
                 </div>
               </div>

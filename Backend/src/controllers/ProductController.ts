@@ -262,6 +262,15 @@ export async function updateProduct(req: Request, res: Response) {
   if (body.productionTimeDays !== undefined) product.productionTimeDays = body.productionTimeDays;
   if (body.isActive !== undefined) product.isActive = body.isActive;
 
+  if (body.images !== undefined) {
+    product.images = body.images.map((img, index) => ({
+      url: img.url,
+      publicId: img.publicId ?? `manual-${Date.now()}-${index}`,
+      altText: img.altText ?? product.name,
+      sortOrder: img.sortOrder ?? index,
+    })) as any;
+  }
+
   await product.save();
 
   return res.status(200).json({

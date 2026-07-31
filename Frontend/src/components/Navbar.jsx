@@ -19,9 +19,9 @@ const TAGLINE = "Stories Woven By Hand";
 const NAV_LINKS = [
   { name: "Home", path: "/" },
   { name: "Shop", path: "/products" },
-  { name: "Collections", path: "/collections" },
-  { name: "About", path: "/about" },
-  { name: "Contact", path: "/contact" },
+  { name: "Collections", path: "/#collections", targetId: "collections" },
+  { name: "About", path: "/#about", targetId: "about" },
+  { name: "Contact", path: "/#contact", targetId: "contact" },
 ];
 
 function BlockPrintRule() {
@@ -79,6 +79,15 @@ export default function Navbar() {
             <NavLink
               key={link.name}
               to={link.path}
+              onClick={(e) => {
+                if (link.targetId) {
+                  const el = document.getElementById(link.targetId);
+                  if (el) {
+                    e.preventDefault();
+                    el.scrollIntoView({ behavior: "smooth" });
+                  }
+                }
+              }}
               className={({ isActive }) =>
                 `relative text-sm font-medium transition-colors duration-300 ${
                   isActive ? "text-[#C97C5D] font-bold" : "text-[#5A5A5A] hover:text-[#4F6B5C]"
@@ -198,7 +207,16 @@ export default function Navbar() {
             <NavLink
               key={link.name}
               to={link.path}
-              onClick={() => setIsOpen(false)}
+              onClick={(e) => {
+                setIsOpen(false);
+                if (link.targetId) {
+                  const el = document.getElementById(link.targetId);
+                  if (el) {
+                    e.preventDefault();
+                    el.scrollIntoView({ behavior: "smooth" });
+                  }
+                }
+              }}
               className={({ isActive }) =>
                 `text-sm font-medium transition-colors ${
                   isActive ? "text-[#C97C5D] font-bold" : "text-[#5A5A5A]"

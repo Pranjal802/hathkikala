@@ -21,7 +21,8 @@ function computePriceRange(variants: IVariant[]): { min: number; max: number } {
 // variant's full detail just to render a product card.
 export function toProductListItem(product: ProductDocument) {
   const priceRange = computePriceRange(product.variants);
-  const primaryImage = [...product.images].sort((a, b) => a.sortOrder - b.sortOrder)[0];
+  const sortedImages = [...product.images].sort((a, b) => a.sortOrder - b.sortOrder);
+  const primaryImage = sortedImages[0];
   const hasStock = product.variants.some((v) => v.isActive && v.stockQty > 0);
   const totalStock = product.variants.reduce((sum, v) => sum + (v.isActive ? v.stockQty : 0), 0);
 
@@ -39,6 +40,7 @@ export function toProductListItem(product: ProductDocument) {
     isTrending: !!product.isTrending,
     priceRange,
     thumbnail: primaryImage?.url ?? null,
+    images: sortedImages.map((img) => img.url),
     isCustomizable: product.isCustomizable,
     productionTimeDays: product.productionTimeDays ?? null,
     inStock: hasStock,
@@ -55,7 +57,8 @@ export function toProductListItem(product: ProductDocument) {
 }
 
 export function toProductAdminListItem(product: ProductDocument) {
-  const primaryImage = [...product.images].sort((a, b) => a.sortOrder - b.sortOrder)[0];
+  const sortedImages = [...product.images].sort((a, b) => a.sortOrder - b.sortOrder);
+  const primaryImage = sortedImages[0];
   const totalStock = product.variants.reduce((sum, v) => sum + (v.isActive ? v.stockQty : 0), 0);
 
   return {
@@ -63,6 +66,7 @@ export function toProductAdminListItem(product: ProductDocument) {
     categoryId: product.categoryId.toString(),
     name: product.name,
     slug: product.slug,
+    description: product.description ?? null,
     basePrice: product.basePrice,
     discountPrice: product.discountPrice ?? null,
     badge: product.badge ?? null,
@@ -71,6 +75,21 @@ export function toProductAdminListItem(product: ProductDocument) {
     isTrending: !!product.isTrending,
     isCustomizable: product.isCustomizable,
     thumbnail: primaryImage?.url ?? null,
+    images: sortedImages.map((img) => ({
+      id: img._id?.toString(),
+      url: img.url,
+      publicId: img.publicId,
+      altText: img.altText ?? null,
+      sortOrder: img.sortOrder,
+    })),
+    variants: product.variants.map((v) => ({
+      id: v._id?.toString(),
+      sku: v.sku,
+      price: v.price,
+      stockQty: v.stockQty,
+      attributes: attributesToPlainObject(v.attributes),
+      isActive: v.isActive,
+    })),
     variantCount: product.variants.length,
     totalStock,
     isActive: product.isActive,
