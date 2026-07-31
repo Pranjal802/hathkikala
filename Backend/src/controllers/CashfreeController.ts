@@ -46,7 +46,7 @@ export async function createCashfreeOrder(req: Request, res: Response) {
         customer_phone: order.shippingAddress.phone.replace(/[^0-9]/g, '').slice(-10) || '9876543210',
       },
       order_meta: {
-        return_url: `${req.headers.origin || 'http://localhost:5174'}/orders?cf_order_id={order_id}`,
+        return_url: `${req.headers.origin || process.env.FRONTEND_URL || 'https://hathkikala-lwdc.vercel.app'}/orders?cf_order_id={order_id}`,
       },
     };
 
