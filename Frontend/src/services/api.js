@@ -1,4 +1,13 @@
-const BASE_URL = import.meta.env.VITE_API_URL || '/api';
+const getBaseUrl = () => {
+  const envUrl = import.meta.env.VITE_API_URL;
+  if (!envUrl) return '/api';
+  if (envUrl.startsWith('http://') || envUrl.startsWith('https://') || envUrl.startsWith('/')) {
+    return envUrl;
+  }
+  return `https://${envUrl}`;
+};
+
+const BASE_URL = getBaseUrl();
 
 async function request(endpoint, options = {}) {
   const defaultHeaders = {
