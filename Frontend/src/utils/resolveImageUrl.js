@@ -18,9 +18,18 @@ const ASSET_MAP = {
   'purse2_model.png': purse2Model,
 };
 
+export const DEFAULT_PRODUCT_IMAGE = greenBangles;
+
+export function handleImageError(e) {
+  if (e?.currentTarget) {
+    e.currentTarget.onerror = null;
+    e.currentTarget.src = greenBangles;
+  }
+}
+
 export function resolveImageUrl(url) {
-  if (!url) return null;
-  if (typeof url !== 'string') return null;
+  if (!url) return greenBangles;
+  if (typeof url !== 'string') return greenBangles;
 
   // Cloudinary or HTTP(S) external URLs
   if (url.startsWith('http://') || url.startsWith('https://')) {

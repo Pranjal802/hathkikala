@@ -6,7 +6,7 @@ import {
   Grid, List, RotateCcw, CheckCircle2, ChevronRight
 } from 'lucide-react';
 import { useStore } from '../context/StoreContext.jsx';
-import { resolveImageUrl } from '../utils/resolveImageUrl.js';
+import { resolveImageUrl, handleImageError } from '../utils/resolveImageUrl.js';
 
 export default function ProductsPage() {
   const {
@@ -312,7 +312,7 @@ export default function ProductsPage() {
                   >
                     <div className="relative h-64 bg-gradient-to-br from-[#F5E6DA]/50 to-[#FDEEE4]/50 flex items-center justify-center overflow-hidden">
                       {prod.thumbnail ? (
-                        <img src={resolveImageUrl(prod.thumbnail)} alt={prod.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                        <img src={resolveImageUrl(prod.thumbnail)} onError={handleImageError} alt={prod.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                       ) : (
                         <span className="text-6xl group-hover:scale-110 transition-transform duration-300">{prod.emoji || '🧸'}</span>
                       )}
@@ -398,7 +398,7 @@ export default function ProductsPage() {
                 {filteredProducts.map((prod) => (
                   <div key={prod.id} className="bg-white rounded-3xl p-5 shadow-sm border border-rose-100 flex flex-col sm:flex-row items-center gap-6">
                     <div className="w-32 h-32 bg-rose-50 rounded-2xl flex items-center justify-center overflow-hidden shrink-0">
-                      {prod.thumbnail ? <img src={resolveImageUrl(prod.thumbnail)} alt="" className="w-full h-full object-cover" /> : <span className="text-4xl">{prod.emoji || '🧸'}</span>}
+                      {prod.thumbnail ? <img src={resolveImageUrl(prod.thumbnail)} onError={handleImageError} alt="" className="w-full h-full object-cover" /> : <span className="text-4xl">{prod.emoji || '🧸'}</span>}
                     </div>
 
                     <div className="flex-1 min-w-0 space-y-2">

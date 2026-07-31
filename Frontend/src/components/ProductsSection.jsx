@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { Heart, ShoppingCart, Star, Sparkles, Eye } from "lucide-react";
 import { useStore } from "../context/StoreContext.jsx";
-import { resolveImageUrl } from "../utils/resolveImageUrl.js";
+import { resolveImageUrl, handleImageError } from "../utils/resolveImageUrl.js";
 
 export default function ProductsSection() {
   const {
@@ -101,6 +101,7 @@ export default function ProductsSection() {
                   {product.thumbnail ? (
                     <img
                       src={resolveImageUrl(product.thumbnail)}
+                      onError={handleImageError}
                       alt={product.name}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                     />
