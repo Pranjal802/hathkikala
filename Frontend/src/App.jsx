@@ -18,6 +18,7 @@ import CollectionsPage from './pages/CollectionsPage.jsx';
 import AboutPage from './pages/AboutPage.jsx';
 import ContactPage from './pages/ContactPage.jsx';
 import OrdersPage from './pages/OrdersPage.jsx';
+import ProfilePage from './pages/ProfilePage.jsx';
 import AdminStudioPage from './pages/AdminStudioPage.jsx';
 
 function App() {
@@ -44,6 +45,7 @@ function App() {
           <Route path="/about" element={<AboutPage />} />
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/orders" element={<OrdersPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
           <Route path="/admin" element={<AdminStudioPage />} />
         </Routes>
       </main>

@@ -46,6 +46,29 @@ export const api = {
   resendOtp: (email) => request('/auth/resend-otp', { method: 'POST', body: JSON.stringify({ email }) }),
   logout: () => request('/auth/logout', { method: 'POST' }),
   getAccount: () => request('/account/me'),
+  updateProfile: (profileData) =>
+    request('/account/profile', {
+      method: 'PATCH',
+      body: JSON.stringify(profileData),
+    }),
+  addAddress: (addressData) =>
+    request('/account/addresses', {
+      method: 'POST',
+      body: JSON.stringify(addressData),
+    }),
+  updateAddress: (addressId, addressData) =>
+    request(`/account/addresses/${addressId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(addressData),
+    }),
+  deleteAddress: (addressId) =>
+    request(`/account/addresses/${addressId}`, {
+      method: 'DELETE',
+    }),
+  setDefaultAddress: (addressId) =>
+    request(`/account/addresses/${addressId}/default`, {
+      method: 'PATCH',
+    }),
 
   // Categories & Products
   getCategories: () => request('/categories'),

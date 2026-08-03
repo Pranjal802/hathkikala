@@ -143,6 +143,51 @@ export function StoreProvider({ children }) {
     }
   };
 
+  const updateProfile = async (profileData) => {
+    const res = await api.updateProfile(profileData);
+    if (res.success && res.data?.user) {
+      setUser(res.data.user);
+      showNotification('Profile updated successfully!');
+    }
+    return res;
+  };
+
+  const addAddress = async (addressData) => {
+    const res = await api.addAddress(addressData);
+    if (res.success && res.data?.user) {
+      setUser(res.data.user);
+      showNotification('New address saved!');
+    }
+    return res;
+  };
+
+  const updateAddress = async (addressId, addressData) => {
+    const res = await api.updateAddress(addressId, addressData);
+    if (res.success && res.data?.user) {
+      setUser(res.data.user);
+      showNotification('Address updated!');
+    }
+    return res;
+  };
+
+  const deleteAddress = async (addressId) => {
+    const res = await api.deleteAddress(addressId);
+    if (res.success && res.data?.user) {
+      setUser(res.data.user);
+      showNotification('Address deleted');
+    }
+    return res;
+  };
+
+  const setDefaultAddress = async (addressId) => {
+    const res = await api.setDefaultAddress(addressId);
+    if (res.success && res.data?.user) {
+      setUser(res.data.user);
+      showNotification('Default address set!');
+    }
+    return res;
+  };
+
   const logout = async () => {
     await api.logout().catch(() => {});
     setUser(null);
@@ -306,6 +351,7 @@ export function StoreProvider({ children }) {
 
         showNotification,
         login, signup, googleLogin, verifyOtp, logout,
+        updateProfile, addAddress, updateAddress, deleteAddress, setDefaultAddress,
         addToCart, updateCartQty, removeFromCart,
         toggleWishlist, isWishlisted,
         fetchProducts,

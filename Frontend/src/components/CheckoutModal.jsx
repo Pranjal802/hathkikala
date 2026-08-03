@@ -255,9 +255,63 @@ export default function CheckoutModal() {
 
             {/* Shipping Address */}
             <div className="space-y-3">
-              <h4 className="font-bold text-gray-800 text-sm flex items-center gap-2">
-                <Truck className="w-4 h-4 text-[#C97C5D]" /> Delivery Address
-              </h4>
+              <div className="flex items-center justify-between">
+                <h4 className="font-bold text-gray-800 text-sm flex items-center gap-2">
+                  <Truck className="w-4 h-4 text-[#C97C5D]" /> Delivery Address
+                </h4>
+
+                {(user?.addresses?.length || 0) > 0 && (
+                  <span className="text-xs text-gray-400 font-medium">Select a saved address or enter new</span>
+                )}
+              </div>
+
+              {/* Saved Address Quick Selector Chips */}
+              {(user?.addresses?.length || 0) > 0 && (
+                <div className="flex flex-wrap gap-2 py-1">
+                  {user.addresses.map((saved) => (
+                    <button
+                      key={saved.id || saved._id}
+                      type="button"
+                      onClick={() => {
+                        setAddressForm({
+                          fullName: saved.fullName || user.name || '',
+                          phone: saved.phone || user.phone || '',
+                          line1: saved.line1 || '',
+                          line2: saved.line2 || '',
+                          city: saved.city || '',
+                          state: saved.state || '',
+                          postalCode: saved.postalCode || '',
+                          country: saved.country || 'India',
+                        });
+                        showNotification(`Selected address: ${saved.label || 'Home'} (${saved.city})`);
+                      }}
+                      className="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-xl text-xs font-bold text-[#C97C5D] transition flex items-center gap-1.5"
+                    >
+                      <CheckCircle2 className="w-3.5 h-3.5 text-[#C97C5D]" />
+                      <span>{saved.label || 'Home'} ({saved.line1?.substring(0, 18)}...)</span>
+                      {saved.isDefault && <span className="bg-emerald-600 text-white text-[9px] px-1.5 py-0.2 rounded-full">Default</span>}
+                    </button>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAddressForm({
+                        fullName: user.name || '',
+                        phone: user.phone || '',
+                        line1: '',
+                        line2: '',
+                        city: '',
+                        state: '',
+                        postalCode: '',
+                        country: 'India',
+                      });
+                    }}
+                    className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-xs font-bold transition"
+                  >
+                    + Clear Form
+                  </button>
+                </div>
+              )}
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <input

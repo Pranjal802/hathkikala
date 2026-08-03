@@ -24,4 +24,5 @@ export interface UserResponseDto {
   email: string;
   phone: string;
   role: string;
+  addresses?: any[];
 }
