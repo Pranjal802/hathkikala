@@ -75,8 +75,8 @@ export default function Navbar() {
           </div>
         </Link>
 
-        {/* Desktop Router Nav Links with Active Indicator Effect */}
-        <div className="hidden md:flex items-center gap-2 lg:gap-4">
+        {/* Desktop Router Nav Links with Animated Active Line Effect */}
+        <div className="hidden md:flex items-center gap-6 lg:gap-8">
           {NAV_LINKS.map((link) => (
             <NavLink
               key={link.name}
@@ -91,22 +91,33 @@ export default function Navbar() {
                   }
                 }
               }}
-              className={({ isActive }) =>
-                `relative px-3.5 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
-                  isActive
-                    ? "text-[#C97C5D] font-extrabold bg-[#C97C5D]/10 shadow-inner"
-                    : "text-[#5A5A5A] hover:text-[#4F6B5C] hover:bg-[#E8DDD0]/50"
-                }`
-              }
+              className={({ isActive }) => {
+                const isHashLink = Boolean(link.targetId);
+                const isHashActive = isHashLink && window.location.hash === `#${link.targetId}`;
+                const isActuallyActive = isHashLink ? isHashActive : isActive;
+
+                return `relative py-1.5 text-sm font-bold tracking-wide transition-colors duration-300 group ${
+                  isActuallyActive ? "text-[#C97C5D]" : "text-[#3E2C23]/80 hover:text-[#C97C5D]"
+                }`;
+              }}
             >
-              {({ isActive }) => (
-                <span className="relative inline-block">
-                  {link.name}
-                  {isActive && (
-                    <span className="absolute -bottom-1 left-0 right-0 h-[2.5px] bg-gradient-to-r from-[#C97C5D] via-[#D8A7B1] to-[#C97C5D] rounded-full shadow-sm animate-fadeIn" />
-                  )}
-                </span>
-              )}
+              {({ isActive }) => {
+                const isHashLink = Boolean(link.targetId);
+                const isHashActive = isHashLink && window.location.hash === `#${link.targetId}`;
+                const isActuallyActive = isHashLink ? isHashActive : isActive;
+
+                return (
+                  <span className="relative inline-block py-1">
+                    {link.name}
+                    {/* Animated Underline */}
+                    <span
+                      className={`absolute bottom-0 left-0 w-full h-[3px] bg-gradient-to-r from-[#C97C5D] via-[#D8A7B1] to-[#C97C5D] rounded-full transition-transform duration-300 ease-out origin-left ${
+                        isActuallyActive ? "scale-x-100 shadow-sm" : "scale-x-0 group-hover:scale-x-100"
+                      }`}
+                    />
+                  </span>
+                );
+              }}
             </NavLink>
           ))}
         </div>
