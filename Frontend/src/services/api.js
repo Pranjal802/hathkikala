@@ -291,6 +291,13 @@ export const api = {
       method: 'PATCH',
       body: JSON.stringify(data),
     }),
+
+  // AI Virtual Try-On API
+  generateVirtualTryOn: (data) =>
+    request('/ai/virtual-tryon', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
 };
 
 

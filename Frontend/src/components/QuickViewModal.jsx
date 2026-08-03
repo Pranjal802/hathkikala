@@ -1,14 +1,16 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Star, Heart, ShoppingCart, Check, HandHeart } from 'lucide-react';
+import { X, Star, Heart, ShoppingCart, Check, HandHeart, Sparkles } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
 import { resolveImageUrl } from '../utils/resolveImageUrl.js';
 import { useState, useEffect } from 'react';
+import VirtualTryOnModal from './VirtualTryOnModal.jsx';
 
 export default function QuickViewModal() {
   const { quickViewProduct: product, setQuickViewProduct, addToCart, toggleWishlist, isWishlisted } = useStore();
   const [qty, setQty] = useState(1);
   const [selectedVariantSku, setSelectedVariantSku] = useState(null);
   const [added, setAdded] = useState(false);
+  const [tryOnOpen, setTryOnOpen] = useState(false);
 
   useEffect(() => {
     setQty(1);
@@ -145,31 +147,46 @@ export default function QuickViewModal() {
 
                   {/* Actions */}
                   <div>
-                    <div className="flex gap-2">
-                      <motion.button
-                        id="quickview-add-btn"
-                        onClick={handleAdd}
-                        whileTap={{ scale: 0.97 }}
-                        className={`flex-1 flex items-center justify-center gap-2.5 px-5 py-3.5 rounded-2xl font-sans font-bold text-sm transition-all shadow-md ${
-                          added
-                            ? 'bg-[#9CAF88] text-white'
-                            : 'bg-gradient-to-r from-[#C97C5D] to-[#D8A7B1] text-white'
-                        }`}
-                      >
-                        {added ? <Check size={18} className="shrink-0" /> : <ShoppingCart size={18} className="shrink-0" />}
-                        {added ? 'Added to Cart!' : `Add to Cart (₹${currentPrice * qty})`}
-                      </motion.button>
+                    <div className="flex flex-col gap-2">
+                      <div className="flex gap-2">
+                        <motion.button
+                          id="quickview-add-btn"
+                          onClick={handleAdd}
+                          whileTap={{ scale: 0.97 }}
+                          className={`flex-1 flex items-center justify-center gap-2.5 px-5 py-3.5 rounded-2xl font-sans font-bold text-sm transition-all shadow-md ${
+                            added
+                              ? 'bg-[#9CAF88] text-white'
+                              : 'bg-gradient-to-r from-[#C97C5D] to-[#D8A7B1] text-white'
+                          }`}
+                        >
+                          {added ? <Check size={18} className="shrink-0" /> : <ShoppingCart size={18} className="shrink-0" />}
+                          {added ? 'Added to Cart!' : `Add to Cart (₹${currentPrice * qty})`}
+                        </motion.button>
+
+                        <button
+                          onClick={() => toggleWishlist(product)}
+                          className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-sm transition-all ${
+                            isWishlisted(product.id)
+                              ? 'bg-[#D8A7B1] text-white'
+                              : 'bg-[#F5E6DA] text-[#D8A7B1]'
+                          }`}
+                        >
+                          <Heart size={18} className={isWishlisted(product.id) ? 'fill-white' : ''} />
+                        </button>
+                      </div>
 
                       <button
-                        onClick={() => toggleWishlist(product)}
-                        className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-sm transition-all ${
-                          isWishlisted(product.id)
-                            ? 'bg-[#D8A7B1] text-white'
-                            : 'bg-[#F5E6DA] text-[#D8A7B1]'
-                        }`}
+                        onClick={() => setTryOnOpen(true)}
+                        className="w-full py-2.5 bg-[#3E2C23] hover:bg-[#C97C5D] text-white font-bold rounded-2xl text-xs shadow transition flex items-center justify-center gap-1.5"
                       >
-                        <Heart size={18} className={isWishlisted(product.id) ? 'fill-white' : ''} />
+                        <Sparkles size={14} className="text-amber-300 animate-pulse" /> AI Virtual Try-On Preview
                       </button>
+
+                      <VirtualTryOnModal
+                        product={product}
+                        isOpen={tryOnOpen}
+                        onClose={() => setTryOnOpen(false)}
+                      />
                     </div>
 
                     <div className="flex items-center gap-2 mt-4 bg-[#F5E6DA]/60 rounded-xl px-3 py-2">

@@ -2,11 +2,12 @@ import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
-  Star, Heart, ShoppingCart, Check, HandHeart, ShieldCheck, Truck, RotateCcw, ChevronRight
+  Star, Heart, ShoppingCart, Check, HandHeart, ShieldCheck, Truck, RotateCcw, ChevronRight, Sparkles
 } from 'lucide-react';
 import { useStore } from '../context/StoreContext.jsx';
 import { api } from '../services/api.js';
 import { resolveImageUrl } from '../utils/resolveImageUrl.js';
+import VirtualTryOnModal from '../components/VirtualTryOnModal.jsx';
 
 export default function ProductDetailPage() {
   const { slug } = useParams();
@@ -18,6 +19,7 @@ export default function ProductDetailPage() {
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState(false);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [tryOnOpen, setTryOnOpen] = useState(false);
 
   useEffect(() => {
     async function loadProduct() {
@@ -211,7 +213,7 @@ export default function ProductDetailPage() {
 
             {/* Action Buttons */}
             <div className="space-y-4 pt-4 border-t border-rose-100">
-              <div className="flex gap-3">
+              <div className="flex flex-col sm:flex-row gap-3">
                 <button
                   onClick={handleAddToCart}
                   className={`flex-1 py-4 rounded-2xl font-sans font-bold text-sm flex items-center justify-center gap-2 shadow-md transition-all ${
@@ -223,6 +225,13 @@ export default function ProductDetailPage() {
                 </button>
 
                 <button
+                  onClick={() => setTryOnOpen(true)}
+                  className="px-5 py-4 bg-[#3E2C23] hover:bg-[#C97C5D] text-white font-bold rounded-2xl text-xs shadow-md transition flex items-center justify-center gap-2"
+                >
+                  <Sparkles size={16} className="text-amber-300 animate-pulse" /> AI Virtual Try-On
+                </button>
+
+                <button
                   onClick={() => toggleWishlist(product)}
                   className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-sm transition ${
                     isWishlisted(product.id) ? 'bg-[#D8A7B1] text-white' : 'bg-[#F5E6DA] text-[#D8A7B1]'
@@ -231,6 +240,13 @@ export default function ProductDetailPage() {
                   <Heart size={20} className={isWishlisted(product.id) ? 'fill-white' : ''} />
                 </button>
               </div>
+
+              {/* AI Virtual Try-On Modal */}
+              <VirtualTryOnModal
+                product={product}
+                isOpen={tryOnOpen}
+                onClose={() => setTryOnOpen(false)}
+              />
 
               {/* Guarantees */}
               <div className="grid grid-cols-3 gap-2 bg-[#F5E6DA]/40 p-3 rounded-2xl text-center text-[11px] text-[#5C4033]/80 font-bold">
