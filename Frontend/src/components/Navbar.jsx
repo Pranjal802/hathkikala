@@ -21,9 +21,9 @@ const TAGLINE = "Stories Woven By Hand";
 const NAV_LINKS = [
   { name: "Home", path: "/" },
   { name: "Shop", path: "/products" },
-  { name: "Collections", path: "/#collections", targetId: "collections" },
-  { name: "About", path: "/#about", targetId: "about" },
-  { name: "Contact", path: "/#contact", targetId: "contact" },
+  { name: "Collections", path: "/collections" },
+  { name: "About", path: "/about" },
+  { name: "Contact", path: "/contact" },
 ];
 
 function BlockPrintRule() {
@@ -82,42 +82,23 @@ export default function Navbar() {
               key={link.name}
               to={link.path}
               end={link.path === '/'}
-              onClick={(e) => {
-                if (link.targetId) {
-                  const el = document.getElementById(link.targetId);
-                  if (el) {
-                    e.preventDefault();
-                    el.scrollIntoView({ behavior: "smooth" });
-                  }
-                }
-              }}
-              className={({ isActive }) => {
-                const isHashLink = Boolean(link.targetId);
-                const isHashActive = isHashLink && window.location.hash === `#${link.targetId}`;
-                const isActuallyActive = isHashLink ? isHashActive : isActive;
-
-                return `relative py-1.5 text-sm font-bold tracking-wide transition-colors duration-300 group ${
-                  isActuallyActive ? "text-[#C97C5D]" : "text-[#3E2C23]/80 hover:text-[#C97C5D]"
-                }`;
-              }}
+              className={({ isActive }) =>
+                `relative py-1.5 text-sm font-bold tracking-wide transition-colors duration-300 group ${
+                  isActive ? "text-[#C97C5D]" : "text-[#3E2C23]/80 hover:text-[#C97C5D]"
+                }`
+              }
             >
-              {({ isActive }) => {
-                const isHashLink = Boolean(link.targetId);
-                const isHashActive = isHashLink && window.location.hash === `#${link.targetId}`;
-                const isActuallyActive = isHashLink ? isHashActive : isActive;
-
-                return (
-                  <span className="relative inline-block py-1">
-                    {link.name}
-                    {/* Animated Underline */}
-                    <span
-                      className={`absolute bottom-0 left-0 w-full h-[3px] bg-gradient-to-r from-[#C97C5D] via-[#D8A7B1] to-[#C97C5D] rounded-full transition-transform duration-300 ease-out origin-left ${
-                        isActuallyActive ? "scale-x-100 shadow-sm" : "scale-x-0 group-hover:scale-x-100"
-                      }`}
-                    />
-                  </span>
-                );
-              }}
+              {({ isActive }) => (
+                <span className="relative inline-block py-1">
+                  {link.name}
+                  {/* Animated Underline */}
+                  <span
+                    className={`absolute bottom-0 left-0 w-full h-[3px] bg-gradient-to-r from-[#C97C5D] via-[#D8A7B1] to-[#C97C5D] rounded-full transition-transform duration-300 ease-out origin-left ${
+                      isActive ? "scale-x-100 shadow-sm" : "scale-x-0 group-hover:scale-x-100"
+                    }`}
+                  />
+                </span>
+              )}
             </NavLink>
           ))}
         </div>
@@ -247,16 +228,7 @@ export default function Navbar() {
               key={link.name}
               to={link.path}
               end={link.path === '/'}
-              onClick={(e) => {
-                setIsOpen(false);
-                if (link.targetId) {
-                  const el = document.getElementById(link.targetId);
-                  if (el) {
-                    e.preventDefault();
-                    el.scrollIntoView({ behavior: "smooth" });
-                  }
-                }
-              }}
+              onClick={() => setIsOpen(false)}
               className={({ isActive }) =>
                 `text-sm font-medium transition-all duration-200 px-3 py-2 rounded-xl ${
                   isActive
