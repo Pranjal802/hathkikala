@@ -6,6 +6,9 @@ export interface ISiteSetting {
   heroTitle?: string;
   heroSubtitle?: string;
   freeShippingThreshold?: number;
+  chatWidgetEnabled?: boolean;
+  proactiveNudgeEnabled?: boolean;
+  proactiveNudgeDelaySeconds?: number;
 }
 
 const siteSettingSchema = new Schema<ISiteSetting>({
@@ -14,6 +17,9 @@ const siteSettingSchema = new Schema<ISiteSetting>({
   heroTitle: { type: String, default: 'Handcrafted With Love & Magic' },
   heroSubtitle: { type: String, default: 'Discover unique handmade crochet toys, mirror work accessories, slime kits & customized gifts.' },
   freeShippingThreshold: { type: Number, default: 999 },
+  chatWidgetEnabled: { type: Boolean, default: true },
+  proactiveNudgeEnabled: { type: Boolean, default: true },
+  proactiveNudgeDelaySeconds: { type: Number, default: 8 },
 }, { timestamps: true });
 
 export type SiteSettingDocument = HydratedDocument<ISiteSetting>;

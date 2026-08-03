@@ -26,6 +26,26 @@ export default function AdminPanel() {
   const [loading, setLoading] = useState(false);
   const [uploadingImages, setUploadingImages] = useState(false);
 
+  // Chat & FAQ Studio States
+  const [adminChatQuestions, setAdminChatQuestions] = useState([]);
+  const [adminUnansweredQuestions, setAdminUnansweredQuestions] = useState([]);
+  const [chatSettingsForm, setChatSettingsForm] = useState({
+    chatWidgetEnabled: true,
+    proactiveNudgeEnabled: true,
+    proactiveNudgeDelaySeconds: 8,
+  });
+  const [showAddFaqModal, setShowAddFaqModal] = useState(false);
+  const [editingFaq, setEditingFaq] = useState(null);
+  const [faqForm, setFaqForm] = useState({
+    category: 'Orders & Delivery',
+    question: '',
+    answer: '',
+    isFeatured: false,
+    orderPosition: '1',
+  });
+  const [faqSubTab, setFaqSubTab] = useState('questions'); // 'questions' | 'unanswered'
+  const [faqCategoryFilter, setFaqCategoryFilter] = useState('All');
+
   // Filters & Order Management Studio States
   const [orderStatusFilter, setOrderStatusFilter] = useState('all');
   const [paymentStatusFilter, setPaymentStatusFilter] = useState('all');
@@ -132,6 +152,15 @@ export default function AdminPanel() {
       } else if (activeTab === 'support') {
         const res = await api.getSupportTickets();
         if (res.success) setAdminSupportTickets(res.data.tickets);
+      } else if (activeTab === 'faq') {
+        const [qRes, uRes, setRes] = await Promise.all([
+          api.getAdminChatQuestions().catch(() => null),
+          api.getAdminUnansweredQuestions().catch(() => null),
+          api.getChatQuestions().catch(() => null),
+        ]);
+        if (qRes?.success) setAdminChatQuestions(qRes.data.questions || []);
+        if (uRes?.success) setAdminUnansweredQuestions(uRes.data.unansweredQuestions || []);
+        if (setRes?.success && setRes.data.settings) setChatSettingsForm(setRes.data.settings);
       }
     } catch (err) {
       showNotification(err.message || 'Failed to load admin data', 'error');
@@ -730,11 +759,72 @@ export default function AdminPanel() {
     }
   };
 
-  const handleUpdateTicketStatus = async (id, status, notes = undefined) => {
+  const handleSaveFaq = async (e) => {
+    e.preventDefault();
+    if (!faqForm.question || !faqForm.answer) {
+      showNotification('Question and Answer are required', 'error');
+      return;
+    }
     try {
-      await api.updateSupportTicket(id, { status, notes });
-      showNotification(`Ticket updated to ${status}`);
+      if (editingFaq) {
+        await api.updateAdminChatQuestion(editingFaq._id, faqForm);
+        showNotification('FAQ Question updated successfully!');
+      } else {
+        await api.createAdminChatQuestion(faqForm);
+        showNotification('New FAQ Question added to live storefront!');
+      }
+      setShowAddFaqModal(false);
+      setEditingFaq(null);
+      setFaqForm({ category: 'Orders & Delivery', question: '', answer: '', isFeatured: false, orderPosition: '1' });
       loadAdminData();
+    } catch (err) {
+      showNotification(err.message, 'error');
+    }
+  };
+
+  const handleDeleteFaq = async (id) => {
+    if (confirm('Are you sure you want to delete this FAQ question?')) {
+      try {
+        await api.deleteAdminChatQuestion(id);
+        showNotification('FAQ Question deleted');
+        loadAdminData();
+      } catch (err) {
+        showNotification(err.message, 'error');
+      }
+    }
+  };
+
+  const handleToggleFaqFeatured = async (id, currentVal) => {
+    try {
+      await api.updateAdminChatQuestion(id, { isFeatured: !currentVal });
+      showNotification(`Featured status updated`);
+      loadAdminData();
+    } catch (err) {
+      showNotification(err.message, 'error');
+    }
+  };
+
+  const handleConvertUnansweredToFaq = async (unans) => {
+    setFaqForm({
+      category: 'Orders & Delivery',
+      question: unans.questionText,
+      answer: '',
+      isFeatured: false,
+      orderPosition: '1',
+    });
+    setEditingFaq(null);
+    setShowAddFaqModal(true);
+    try {
+      await api.updateAdminUnansweredQuestion(unans._id, { status: 'added_to_faq' });
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleSaveChatSettings = async () => {
+    try {
+      await api.updateSiteSettings(chatSettingsForm);
+      showNotification('Chat widget settings saved live!');
     } catch (err) {
       showNotification(err.message, 'error');
     }
@@ -872,6 +962,17 @@ export default function AdminPanel() {
               }`}
             >
               <Headset className="w-4 h-4 shrink-0" /> Support & Enquiries
+            </button>
+
+            <button
+              onClick={() => setActiveTab('faq')}
+              className={`flex items-center gap-2.5 px-4 py-3 rounded-2xl text-sm font-semibold transition ${
+                activeTab === 'faq'
+                  ? 'bg-[#C97C5D] text-white shadow-md'
+                  : 'text-gray-700 hover:bg-rose-100'
+              }`}
+            >
+              <MessageSquare className="w-4 h-4 shrink-0" /> Chat & FAQ Studio
             </button>
           </div>
 
@@ -1743,6 +1844,266 @@ export default function AdminPanel() {
               </div>
             )}
 
+            {/* CHAT & FAQ STUDIO TAB */}
+            {activeTab === 'faq' && (
+              <div className="space-y-6">
+                
+                {/* Header Title Bar */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div>
+                    <h3 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
+                      <MessageSquare className="w-6 h-6 text-[#C97C5D]" /> Chat & FAQ Studio
+                    </h3>
+                    <p className="text-xs text-gray-500 mt-0.5">
+                      Manage predefined FAQ starter questions, configure proactive chat nudge, and convert customer questions into live FAQs.
+                    </p>
+                  </div>
+
+                  <button
+                    onClick={() => {
+                      setEditingFaq(null);
+                      setFaqForm({ category: 'Orders & Delivery', question: '', answer: '', isFeatured: false, orderPosition: '1' });
+                      setShowAddFaqModal(true);
+                    }}
+                    className="px-5 py-2.5 bg-[#C97C5D] hover:bg-[#b0674a] text-white font-bold rounded-2xl text-xs shadow transition flex items-center gap-1.5 self-start sm:self-center"
+                  >
+                    <Plus className="w-4 h-4" /> Add New FAQ Question
+                  </button>
+                </div>
+
+                {/* Site-Wide Settings Banner */}
+                <div className="bg-white p-5 rounded-3xl border border-rose-100 shadow-sm space-y-4">
+                  <span className="text-xs font-extrabold uppercase tracking-wider text-[#C97C5D] flex items-center gap-1.5">
+                    <Sparkles size={15} /> Site-Wide Chat Widget Control Bar
+                  </span>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <label className="flex items-center justify-between p-3 bg-rose-50/50 rounded-2xl border border-rose-100 cursor-pointer">
+                      <span className="text-xs font-bold text-gray-800">Widget Enabled Site-Wide</span>
+                      <input
+                        type="checkbox"
+                        checked={Boolean(chatSettingsForm.chatWidgetEnabled)}
+                        onChange={(e) => setChatSettingsForm({ ...chatSettingsForm, chatWidgetEnabled: e.target.checked })}
+                        className="w-4 h-4 accent-[#C97C5D] rounded cursor-pointer"
+                      />
+                    </label>
+
+                    <label className="flex items-center justify-between p-3 bg-rose-50/50 rounded-2xl border border-rose-100 cursor-pointer">
+                      <span className="text-xs font-bold text-gray-800">Proactive Nudge Speech Bubble</span>
+                      <input
+                        type="checkbox"
+                        checked={Boolean(chatSettingsForm.proactiveNudgeEnabled)}
+                        onChange={(e) => setChatSettingsForm({ ...chatSettingsForm, proactiveNudgeEnabled: e.target.checked })}
+                        className="w-4 h-4 accent-[#C97C5D] rounded cursor-pointer"
+                      />
+                    </label>
+
+                    <div className="flex items-center gap-2 p-3 bg-rose-50/50 rounded-2xl border border-rose-100">
+                      <span className="text-xs font-bold text-gray-800 whitespace-nowrap">Nudge Delay (sec):</span>
+                      <input
+                        type="number"
+                        min={1}
+                        max={60}
+                        value={chatSettingsForm.proactiveNudgeDelaySeconds || 8}
+                        onChange={(e) => setChatSettingsForm({ ...chatSettingsForm, proactiveNudgeDelaySeconds: Number(e.target.value) })}
+                        className="w-16 px-2 py-1 bg-white border border-rose-200 rounded-xl text-xs font-bold text-center"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end">
+                    <button
+                      onClick={handleSaveChatSettings}
+                      className="px-5 py-2 bg-[#3E2C23] hover:bg-[#C97C5D] text-white text-xs font-bold rounded-xl shadow transition"
+                    >
+                      Save Live Chat Settings
+                    </button>
+                  </div>
+                </div>
+
+                {/* Sub-Tabs Selector */}
+                <div className="flex gap-2 border-b border-gray-200 pb-2">
+                  <button
+                    onClick={() => setFaqSubTab('questions')}
+                    className={`px-4 py-2 rounded-2xl text-xs font-bold transition ${
+                      faqSubTab === 'questions'
+                        ? 'bg-[#C97C5D] text-white shadow-sm'
+                        : 'bg-white text-gray-600 border border-gray-200 hover:bg-rose-50'
+                    }`}
+                  >
+                    Predefined Starter Questions ({adminChatQuestions.length})
+                  </button>
+                  <button
+                    onClick={() => setFaqSubTab('unanswered')}
+                    className={`px-4 py-2 rounded-2xl text-xs font-bold transition ${
+                      faqSubTab === 'unanswered'
+                        ? 'bg-[#C97C5D] text-white shadow-sm'
+                        : 'bg-white text-gray-600 border border-gray-200 hover:bg-rose-50'
+                    }`}
+                  >
+                    Customer Unanswered Questions Log ({adminUnansweredQuestions.length})
+                  </button>
+                </div>
+
+                {/* SUB-TAB 1: PREDEFINED QUESTIONS MANAGER */}
+                {faqSubTab === 'questions' && (
+                  <div className="space-y-4">
+                    {/* Category Filter Chips */}
+                    <div className="flex items-center gap-2 overflow-x-auto pb-1">
+                      <span className="text-xs font-bold text-gray-500">Filter Category:</span>
+                      {['All', 'Orders & Delivery', 'Customization', 'Pricing & Payment', 'Product & Stock', 'Returns & Support'].map((cat) => (
+                        <button
+                          key={cat}
+                          onClick={() => setFaqCategoryFilter(cat)}
+                          className={`px-3 py-1 rounded-full text-xs font-bold transition border ${
+                            faqCategoryFilter === cat
+                              ? 'bg-[#C97C5D] text-white border-[#C97C5D]'
+                              : 'bg-white text-gray-600 border-gray-200 hover:border-rose-200'
+                          }`}
+                        >
+                          {cat}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Questions Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {adminChatQuestions
+                        .filter((q) => faqCategoryFilter === 'All' || q.category === faqCategoryFilter)
+                        .map((q) => (
+                          <div
+                            key={q._id}
+                            className={`bg-white p-5 rounded-3xl border transition space-y-3 shadow-sm ${
+                              q.isFeatured ? 'border-amber-300 bg-amber-50/20' : 'border-gray-200'
+                            }`}
+                          >
+                            <div className="flex items-start justify-between gap-2">
+                              <div>
+                                <span className="px-2.5 py-0.5 bg-rose-50 border border-rose-200 text-[#C97C5D] rounded-full text-[10px] font-extrabold uppercase">
+                                  {q.category}
+                                </span>
+                                <h4 className="font-bold text-sm text-gray-800 mt-1 flex items-center gap-1.5">
+                                  {q.isFeatured && <span title="Featured starter question">⭐</span>}
+                                  {q.question}
+                                </h4>
+                              </div>
+
+                              <div className="flex items-center gap-1">
+                                <button
+                                  onClick={() => handleToggleFaqFeatured(q._id, q.isFeatured)}
+                                  className={`p-1.5 rounded-xl border text-xs font-bold transition ${
+                                    q.isFeatured ? 'bg-amber-100 text-amber-800 border-amber-300' : 'bg-gray-50 text-gray-400 border-gray-200 hover:text-amber-500'
+                                  }`}
+                                  title="Toggle Featured on Top"
+                                >
+                                  ⭐
+                                </button>
+                              </div>
+                            </div>
+
+                            <p className="text-xs text-gray-600 leading-relaxed bg-gray-50 p-3 rounded-2xl border border-gray-100">
+                              "{q.answer}"
+                            </p>
+
+                            <div className="flex items-center justify-between pt-2 border-t border-gray-100 text-xs">
+                              <span className="text-gray-400 font-mono">Pos: #{q.orderPosition || 0}</span>
+                              <div className="flex gap-2">
+                                <button
+                                  onClick={() => {
+                                    setEditingFaq(q);
+                                    setFaqForm({
+                                      category: q.category,
+                                      question: q.question,
+                                      answer: q.answer,
+                                      isFeatured: q.isFeatured,
+                                      orderPosition: String(q.orderPosition || 1),
+                                    });
+                                    setShowAddFaqModal(true);
+                                  }}
+                                  className="px-3 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-xl"
+                                >
+                                  Edit
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteFaq(q._id)}
+                                  className="px-3 py-1 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold rounded-xl"
+                                >
+                                  Delete
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* SUB-TAB 2: CUSTOMER UNANSWERED QUESTIONS LOG */}
+                {faqSubTab === 'unanswered' && (
+                  <div className="space-y-4">
+                    {adminUnansweredQuestions.length === 0 ? (
+                      <div className="bg-white p-8 rounded-3xl border border-rose-100 text-center space-y-2">
+                        <CheckCircle className="w-8 h-8 text-emerald-500 mx-auto" />
+                        <h4 className="font-bold text-gray-800">No Unanswered Questions Logged</h4>
+                        <p className="text-xs text-gray-500">When customers type custom queries in the chat widget, they will appear here for admin review.</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {adminUnansweredQuestions.map((unans) => (
+                          <div
+                            key={unans._id}
+                            className="bg-white p-4 rounded-3xl border border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm"
+                          >
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-2">
+                                <span className="font-extrabold text-sm text-gray-800">"{unans.questionText}"</span>
+                                <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase ${
+                                  unans.status === 'added_to_faq' ? 'bg-emerald-100 text-emerald-800' :
+                                  unans.status === 'reviewed' ? 'bg-blue-100 text-blue-800' :
+                                  'bg-amber-100 text-amber-800'
+                                }`}>
+                                  {unans.status}
+                                </span>
+                              </div>
+                              <p className="text-xs text-gray-500">
+                                Logged by: <strong className="text-gray-700">{unans.customerName || 'Customer'}</strong>
+                                {unans.customerPhone ? ` · 📞 ${unans.customerPhone}` : ''}
+                                {unans.customerEmail ? ` · ✉️ ${unans.customerEmail}` : ''}
+                                <span className="ml-2 font-mono text-[10px] text-gray-400">
+                                  ({new Date(unans.createdAt).toLocaleString('en-IN')})
+                                </span>
+                              </p>
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                              {unans.customerPhone && (
+                                <a
+                                  href={`https://wa.me/91${unans.customerPhone}?text=${encodeURIComponent(`Hello ${unans.customerName || ''}, regarding your question: "${unans.questionText}"`)}`}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow flex items-center gap-1"
+                                >
+                                  WhatsApp Customer
+                                </a>
+                              )}
+
+                              <button
+                                onClick={() => handleConvertUnansweredToFaq(unans)}
+                                className="px-3.5 py-1.5 bg-[#C97C5D] hover:bg-[#b0674a] text-white rounded-xl text-xs font-bold shadow flex items-center gap-1"
+                              >
+                                <Plus size={13} /> Add to Live FAQ
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+              </div>
+            )}
+
           </div>
         </div>
 
@@ -2534,6 +2895,108 @@ export default function AdminPanel() {
                   className="px-5 py-2 rounded-xl text-xs font-bold bg-[#C97C5D] text-white hover:bg-[#b0674a] shadow transition"
                 >
                   Save Internal Note
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+      {/* ADD / EDIT FAQ QUESTION MODAL */}
+      {showAddFaqModal && (
+        <div className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl p-6 max-w-lg w-full shadow-2xl space-y-5 border border-rose-100 animate-fadeIn">
+            <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+              <div>
+                <h3 className="text-xl font-extrabold text-gray-800">
+                  {editingFaq ? 'Edit Live FAQ Question' : 'Add New FAQ Question'}
+                </h3>
+                <p className="text-xs text-gray-500 font-medium">Updates are immediately visible on the customer chat widget</p>
+              </div>
+              <button
+                onClick={() => setShowAddFaqModal(false)}
+                className="p-1 rounded-full text-gray-400 hover:bg-rose-50 hover:text-gray-700 transition"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveFaq} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Category</label>
+                <select
+                  value={faqForm.category}
+                  onChange={(e) => setFaqForm({ ...faqForm, category: e.target.value })}
+                  className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-[#C97C5D]"
+                >
+                  <option value="Orders & Delivery">Orders & Delivery</option>
+                  <option value="Customization">Customization</option>
+                  <option value="Pricing & Payment">Pricing & Payment</option>
+                  <option value="Product & Stock">Product & Stock</option>
+                  <option value="Returns & Support">Returns & Support</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Question Prompt</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Do you deliver Pan India?"
+                  value={faqForm.question}
+                  onChange={(e) => setFaqForm({ ...faqForm, question: e.target.value })}
+                  required
+                  className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-[#C97C5D]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Answer Text</label>
+                <textarea
+                  rows={4}
+                  placeholder="Write clear, helpful answer text for customers..."
+                  value={faqForm.answer}
+                  onChange={(e) => setFaqForm({ ...faqForm, answer: e.target.value })}
+                  required
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl text-xs font-medium focus:ring-2 focus:ring-[#C97C5D]"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Order Position</label>
+                  <input
+                    type="number"
+                    value={faqForm.orderPosition}
+                    onChange={(e) => setFaqForm({ ...faqForm, orderPosition: e.target.value })}
+                    className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs font-bold"
+                  />
+                </div>
+
+                <div className="flex items-end pb-2">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={faqForm.isFeatured}
+                      onChange={(e) => setFaqForm({ ...faqForm, isFeatured: e.target.checked })}
+                      className="w-4 h-4 accent-[#C97C5D] rounded"
+                    />
+                    <span className="text-xs font-bold text-gray-800">⭐ Mark as Featured</span>
+                  </label>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-gray-100">
+                <button
+                  type="button"
+                  onClick={() => setShowAddFaqModal(false)}
+                  className="px-4 py-2 rounded-xl text-xs font-bold text-gray-600 hover:bg-gray-100"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 rounded-xl text-xs font-bold bg-[#C97C5D] text-white hover:bg-[#b0674a] shadow"
+                >
+                  {editingFaq ? 'Save Changes' : 'Publish to Live FAQ'}
                 </button>
               </div>
             </form>

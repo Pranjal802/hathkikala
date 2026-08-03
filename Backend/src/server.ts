@@ -22,6 +22,7 @@ import cashfreeRoutes from './routes/CashfreeRoutes.js';
 import wishlistRoutes from './routes/WishlistRoutes.js';
 import reviewRoutes from './routes/ReviewRoutes.js';
 import customizationRequestRoutes from './routes/CustomizationRequestRoutes.js';
+import chatRoutes from './routes/ChatRoutes.js';
 
 const app = express();
 const allowedOrigins = [
@@ -80,6 +81,7 @@ app.use("/api/payments/cashfree", cashfreeRoutes);
 app.use("/api/wishlist", wishlistRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/customization-requests", customizationRequestRoutes);
+app.use("/api/chat", chatRoutes);
 
 // Error handler must be registered LAST, after all routes
 app.use(errorHandler);

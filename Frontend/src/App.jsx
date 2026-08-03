@@ -9,6 +9,7 @@ import SearchModal from './components/SearchModal.jsx';
 import CheckoutModal from './components/CheckoutModal.jsx';
 import OrdersModal from './components/OrdersModal.jsx';
 import Notification from './components/Notification.jsx';
+import ChatWidget from './components/ChatWidget.jsx';
 
 // Pages
 import HomePage from './pages/HomePage.jsx';
@@ -65,6 +66,7 @@ function App() {
           <SearchModal />
           <CheckoutModal />
           <OrdersModal />
+          <ChatWidget />
         </>
       )}
     </div>

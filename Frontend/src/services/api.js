@@ -262,6 +262,35 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ orderId }),
     }),
+
+  // Chat & Guided FAQ Widget
+  getChatQuestions: () => request('/chat/questions'),
+  askUnansweredQuestion: (data) =>
+    request('/chat/ask-unanswered', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+  getAdminChatQuestions: () => request('/chat/admin/questions'),
+  createAdminChatQuestion: (data) =>
+    request('/chat/admin/questions', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+  updateAdminChatQuestion: (id, data) =>
+    request(`/chat/admin/questions/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
+  deleteAdminChatQuestion: (id) =>
+    request(`/chat/admin/questions/${id}`, {
+      method: 'DELETE',
+    }),
+  getAdminUnansweredQuestions: () => request('/chat/admin/unanswered'),
+  updateAdminUnansweredQuestion: (id, data) =>
+    request(`/chat/admin/unanswered/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
 };
 
 
