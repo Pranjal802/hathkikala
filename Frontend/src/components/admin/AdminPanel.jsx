@@ -40,6 +40,17 @@ export default function AdminPanel() {
   const [showCancelModal, setShowCancelModal] = useState(false);
 
   const [productSearch, setProductSearch] = useState('');
+  const [productSubTab, setProductSubTab] = useState('active'); // 'active' | 'history'
+
+  const activeProducts = adminProducts.filter((p) => p.isActive !== false);
+  const historyProducts = adminProducts.filter((p) => p.isActive === false);
+  const displayedProducts = productSubTab === 'active' ? activeProducts : historyProducts;
+  const filteredDisplayedProducts = displayedProducts.filter(
+    (p) =>
+      !productSearch ||
+      p.name?.toLowerCase().includes(productSearch.toLowerCase()) ||
+      p.slug?.toLowerCase().includes(productSearch.toLowerCase())
+  );
 
   // Modals inside Admin
   const [showAddProduct, setShowAddProduct] = useState(false);
@@ -730,7 +741,8 @@ export default function AdminPanel() {
   };
 
   return (
-    <div className="bg-white rounded-3xl shadow-xl w-full max-w-7xl min-h-[85vh] flex flex-col overflow-hidden border border-rose-100 my-2">
+    <>
+      <div className="bg-white rounded-3xl shadow-xl w-full max-w-7xl min-h-[85vh] flex flex-col overflow-hidden border border-rose-100 my-2">
         
         {/* Header */}
         <div className="bg-gradient-to-r from-[#C97C5D] via-[#D8A7B1] to-[#9CAF88] px-6 py-4 text-white flex items-center justify-between shadow-md">
@@ -924,116 +936,227 @@ export default function AdminPanel() {
             {/* PRODUCTS TAB */}
             {activeTab === 'products' && (
               <div className="space-y-6">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <h3 className="text-2xl font-bold text-gray-800">Product Management</h3>
-                  <button
-                    onClick={() => {
-                      setEditingProduct(null);
-                      setProductForm({
-                        name: '', categoryId: categories[0]?.id || '', basePrice: '', discountPrice: '', description: '',
-                        badge: 'Handmade', emoji: '🌸', isCustomizable: false, productionTimeDays: '3', stockQty: '10', sku: '',
-                        imageUrl: '', images: [],
-                      });
-                      setShowAddProduct(true);
-                    }}
-                    className="px-5 py-2.5 bg-[#C97C5D] text-white font-bold rounded-2xl shadow-md hover:bg-[#b0674a] transition flex items-center gap-2"
-                  >
-                    <Plus className="w-4 h-4" /> Add New Product
-                  </button>
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                      <h3 className="text-2xl font-bold text-gray-800">Product Management Studio</h3>
+                      <p className="text-xs text-gray-500 mt-0.5">Manage catalog inventory, variants, and view archived product history</p>
+                    </div>
+
+                    <button
+                      onClick={() => {
+                        setEditingProduct(null);
+                        setProductForm({
+                          name: '', categoryId: categories[0]?.id || '', basePrice: '', discountPrice: '', description: '',
+                          badge: 'Handmade', emoji: '🌸', isCustomizable: false, productionTimeDays: '3', stockQty: '10', sku: '',
+                          imageUrl: '', images: [],
+                        });
+                        setShowAddProduct(true);
+                      }}
+                      className="px-5 py-2.5 bg-[#C97C5D] text-white font-bold rounded-2xl shadow-md hover:bg-[#b0674a] transition flex items-center gap-2 self-start md:self-center"
+                    >
+                      <Plus className="w-4 h-4" /> Add New Product
+                    </button>
+                  </div>
+
+                  {/* Sub-tab switcher bar & Search */}
+                  <div className="bg-white p-4 rounded-3xl border border-rose-100 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="flex bg-rose-50/60 p-1.5 rounded-2xl border border-rose-100">
+                      <button
+                        onClick={() => setProductSubTab('active')}
+                        className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 ${
+                          productSubTab === 'active'
+                            ? 'bg-[#C97C5D] text-white shadow-sm'
+                            : 'text-gray-600 hover:text-[#C97C5D]'
+                        }`}
+                      >
+                        <span>🛍️ Active Catalog</span>
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] ${productSubTab === 'active' ? 'bg-white/20 text-white' : 'bg-gray-200 text-gray-700'}`}>
+                          {activeProducts.length}
+                        </span>
+                      </button>
+
+                      <button
+                        onClick={() => setProductSubTab('history')}
+                        className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 ${
+                          productSubTab === 'history'
+                            ? 'bg-[#C97C5D] text-white shadow-sm'
+                            : 'text-gray-600 hover:text-[#C97C5D]'
+                        }`}
+                      >
+                        <span>📜 Product History / Archive</span>
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] ${productSubTab === 'history' ? 'bg-white/20 text-white' : 'bg-rose-100 text-rose-800'}`}>
+                          {historyProducts.length}
+                        </span>
+                      </button>
+                    </div>
+
+                    {/* Search bar */}
+                    <div className="relative w-full sm:w-64">
+                      <Search className="w-4 h-4 text-gray-400 absolute left-3.5 top-2.5" />
+                      <input
+                        type="text"
+                        placeholder="Search product..."
+                        value={productSearch}
+                        onChange={(e) => setProductSearch(e.target.value)}
+                        className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs font-medium focus:outline-none focus:border-[#C97C5D]"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Product Table */}
+                  <div className="bg-white rounded-3xl border border-rose-100 shadow-sm overflow-hidden">
+                    {filteredDisplayedProducts.length === 0 ? (
+                      <div className="p-12 text-center space-y-2">
+                        <ShoppingBag className="w-10 h-10 text-gray-300 mx-auto" />
+                        <h4 className="font-bold text-gray-700 text-base">
+                          {productSubTab === 'active' ? 'No active products found' : 'No archived products in history'}
+                        </h4>
+                        <p className="text-xs text-gray-400">
+                          {productSubTab === 'active' ? 'Click "+ Add New Product" to create one!' : 'Deleted products will appear here for audit history & restoration.'}
+                        </p>
+                      </div>
+                    ) : (
+                      <table className="w-full text-left border-collapse text-sm">
+                        <thead>
+                          <tr className="bg-rose-50/50 border-b border-rose-100 text-gray-600 font-bold">
+                            <th className="p-4">Product</th>
+                            <th className="p-4">Price</th>
+                            <th className="p-4">Total Stock</th>
+                            <th className="p-4">Catalog Status</th>
+                            <th className="p-4 text-right">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-100">
+                          {filteredDisplayedProducts.map((prod) => (
+                            <tr key={prod.id} className="hover:bg-rose-50/20 transition">
+                              <td className="p-4 flex items-center gap-3">
+                                <div className="w-12 h-12 bg-rose-100 rounded-2xl flex items-center justify-center text-xl overflow-hidden shrink-0">
+                                  {prod.thumbnail ? <img src={resolveImageUrl(prod.thumbnail)} alt="" className="w-full h-full object-cover" /> : prod.emoji || '📦'}
+                                </div>
+                                <div>
+                                  <p className="font-bold text-gray-800">{prod.name}</p>
+                                  <span className="text-xs text-gray-400 font-mono">{prod.slug}</span>
+                                </div>
+                              </td>
+
+                              <td className="p-4 font-bold text-gray-800">₹{prod.basePrice}</td>
+
+                              <td className="p-4">
+                                <div className="flex items-center gap-2">
+                                  <input
+                                    type="number"
+                                    defaultValue={prod.totalStock}
+                                    onBlur={(e) => {
+                                      if (prod.variants?.[0]?.id) {
+                                        handleUpdateStock(prod, prod.variants[0].id, e.target.value);
+                                      }
+                                    }}
+                                    disabled={productSubTab === 'history'}
+                                    className="w-20 px-2 py-1 border border-gray-200 rounded-xl font-bold text-center text-sm disabled:bg-gray-100"
+                                  />
+                                  <span className="text-xs text-gray-500">units</span>
+                                </div>
+                              </td>
+
+                              <td className="p-4">
+                                {productSubTab === 'active' ? (
+                                  <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                                    prod.totalStock > 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
+                                  }`}>
+                                    {prod.totalStock > 0 ? 'In Stock' : 'Out of Stock'}
+                                  </span>
+                                ) : (
+                                  <span className="px-3 py-1 bg-rose-100 text-rose-800 rounded-full text-xs font-bold uppercase tracking-wider">
+                                    Archived / Deleted
+                                  </span>
+                                )}
+                              </td>
+
+                              <td className="p-4 text-right flex items-center justify-end gap-1.5">
+                                {productSubTab === 'active' ? (
+                                  <>
+                                    <button
+                                      onClick={() => {
+                                        setEditingProduct({
+                                          id: prod.id,
+                                          name: prod.name,
+                                          categoryId: prod.categoryId,
+                                          basePrice: prod.basePrice,
+                                          discountPrice: prod.discountPrice || prod.basePrice,
+                                          description: prod.description || '',
+                                          stockQty: prod.totalStock || 10,
+                                          variants: prod.variants,
+                                          images: prod.images || (prod.thumbnail ? [{ id: 'thumb', url: prod.thumbnail }] : []),
+                                        });
+                                      }}
+                                      className="px-3 py-1.5 bg-gray-100 text-gray-700 hover:bg-gray-200 rounded-xl text-xs font-bold transition flex items-center gap-1"
+                                      title="Edit Product Details"
+                                    >
+                                      <Edit2 className="w-3.5 h-3.5" /> Edit
+                                    </button>
+
+                                    <button
+                                      onClick={async () => {
+                                        if (confirm(`Deactivate product "${prod.name}" and move to Product History archive?`)) {
+                                          await api.deleteProduct(prod.id);
+                                          showNotification(`"${prod.name}" moved to Product History archive`);
+                                          loadAdminData();
+                                          fetchProducts();
+                                        }
+                                      }}
+                                      className="px-3 py-1.5 bg-rose-50 text-rose-700 hover:bg-rose-100 rounded-xl text-xs font-bold transition flex items-center gap-1"
+                                      title="Move to History / Deactivate"
+                                    >
+                                      <Trash2 className="w-3.5 h-3.5" /> Delete
+                                    </button>
+                                  </>
+                                ) : (
+                                  <>
+                                    <button
+                                      onClick={async () => {
+                                        try {
+                                          await api.restoreProduct(prod.id);
+                                          showNotification(`"${prod.name}" restored to active catalog! 🌸`);
+                                          loadAdminData();
+                                          fetchProducts();
+                                        } catch (err) {
+                                          showNotification(err.message || 'Failed to restore product', 'error');
+                                        }
+                                      }}
+                                      className="px-3 py-1.5 bg-emerald-600 text-white hover:bg-emerald-700 rounded-xl text-xs font-bold transition flex items-center gap-1 shadow-sm"
+                                      title="Restore back to Active Catalog"
+                                    >
+                                      🔄 Restore Product
+                                    </button>
+
+                                    <button
+                                      onClick={async () => {
+                                        if (confirm(`Permanently delete "${prod.name}" from database? This action CANNOT be undone.`)) {
+                                          try {
+                                            await api.permanentDeleteProduct(prod.id);
+                                            showNotification(`"${prod.name}" permanently deleted`);
+                                            loadAdminData();
+                                            fetchProducts();
+                                          } catch (err) {
+                                            showNotification(err.message || 'Failed to delete permanently', 'error');
+                                          }
+                                        }
+                                      }}
+                                      className="px-3 py-1.5 bg-rose-600 text-white hover:bg-rose-700 rounded-xl text-xs font-bold transition flex items-center gap-1"
+                                      title="Permanently delete from database"
+                                    >
+                                      <Trash2 className="w-3.5 h-3.5" /> Permanent Delete
+                                    </button>
+                                  </>
+                                )}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    )}
+                  </div>
                 </div>
-
-                {/* Product Table */}
-                <div className="bg-white rounded-3xl border border-rose-100 shadow-sm overflow-hidden">
-                  <table className="w-full text-left border-collapse text-sm">
-                    <thead>
-                      <tr className="bg-rose-50/50 border-b border-rose-100 text-gray-600 font-bold">
-                        <th className="p-4">Product</th>
-                        <th className="p-4">Price</th>
-                        <th className="p-4">Total Stock</th>
-                        <th className="p-4">Status</th>
-                        <th className="p-4 text-right">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-100">
-                      {adminProducts.map((prod) => (
-                        <tr key={prod.id} className="hover:bg-rose-50/20 transition">
-                          <td className="p-4 flex items-center gap-3">
-                            <div className="w-12 h-12 bg-rose-100 rounded-2xl flex items-center justify-center text-xl overflow-hidden shrink-0">
-                              {prod.thumbnail ? <img src={resolveImageUrl(prod.thumbnail)} alt="" className="w-full h-full object-cover" /> : prod.emoji || '📦'}
-                            </div>
-                            <div>
-                              <p className="font-bold text-gray-800">{prod.name}</p>
-                              <span className="text-xs text-gray-400 font-mono">{prod.slug}</span>
-                            </div>
-                          </td>
-
-                          <td className="p-4 font-bold text-gray-800">₹{prod.basePrice}</td>
-
-                          <td className="p-4">
-                            <div className="flex items-center gap-2">
-                              <input
-                                type="number"
-                                defaultValue={prod.totalStock}
-                                onBlur={(e) => {
-                                  if (prod.variants?.[0]?.id) {
-                                    handleUpdateStock(prod, prod.variants[0].id, e.target.value);
-                                  }
-                                }}
-                                className="w-20 px-2 py-1 border border-gray-200 rounded-xl font-bold text-center text-sm"
-                              />
-                              <span className="text-xs text-gray-500">units</span>
-                            </div>
-                          </td>
-
-                          <td className="p-4">
-                            <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                              prod.totalStock > 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'
-                            }`}>
-                              {prod.totalStock > 0 ? 'In Stock' : 'Out of Stock'}
-                            </span>
-                          </td>
-
-                          <td className="p-4 text-right flex items-center justify-end gap-1">
-                            <button
-                              onClick={() => {
-                                setEditingProduct({
-                                  id: prod.id,
-                                  name: prod.name,
-                                  categoryId: prod.categoryId,
-                                  basePrice: prod.basePrice,
-                                  discountPrice: prod.discountPrice || prod.basePrice,
-                                  description: prod.description || '',
-                                  stockQty: prod.totalStock || 10,
-                                  variants: prod.variants,
-                                  images: prod.images || (prod.thumbnail ? [{ id: 'thumb', url: prod.thumbnail }] : []),
-                                });
-                              }}
-                              className="p-2 text-gray-600 hover:bg-rose-50 rounded-xl transition"
-                              title="Edit Product"
-                            >
-                              <Edit2 className="w-4 h-4" />
-                            </button>
-
-                            <button
-                              onClick={async () => {
-                                if (confirm(`Deactivate product ${prod.name}?`)) {
-                                  await api.deleteProduct(prod.id);
-                                  showNotification('Product deactivated');
-                                  loadAdminData();
-                                }
-                              }}
-                              className="p-2 text-rose-500 hover:bg-rose-50 rounded-xl transition"
-                              title="Delete Product"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
             )}
 
             {/* ORDERS TAB - COMPLETE ORDER MANAGEMENT STUDIO */}
@@ -1626,9 +1749,10 @@ export default function AdminPanel() {
       {/* Add Product Modal */}
       {showAddProduct && (
         <div className="fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl p-6 max-w-lg w-full shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
-            <h3 className="text-xl font-bold text-gray-800">Add New Handmade Product</h3>
-            <form onSubmit={handleSaveProduct} className="space-y-3">
+          <div className="bg-white rounded-3xl max-w-lg w-full shadow-2xl overflow-hidden max-h-[90vh] flex flex-col border border-rose-100">
+            <div className="p-6 space-y-4 overflow-y-auto flex-1 custom-scrollbar">
+              <h3 className="text-xl font-bold text-gray-800">Add New Handmade Product</h3>
+              <form onSubmit={handleSaveProduct} className="space-y-3">
               <input
                 type="text"
                 placeholder="Product Name"
@@ -1792,6 +1916,7 @@ export default function AdminPanel() {
                 </button>
               </div>
             </form>
+            </div>
           </div>
         </div>
       )}
@@ -1799,9 +1924,10 @@ export default function AdminPanel() {
       {/* Edit Product Modal */}
       {editingProduct && (
         <div className="fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl p-6 max-w-lg w-full shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
-            <h3 className="text-xl font-bold text-gray-800">Edit Product & Images</h3>
-            <form onSubmit={handleUpdateProductDetails} className="space-y-3">
+          <div className="bg-white rounded-3xl max-w-lg w-full shadow-2xl overflow-hidden max-h-[90vh] flex flex-col border border-rose-100">
+            <div className="p-6 space-y-4 overflow-y-auto flex-1 custom-scrollbar">
+              <h3 className="text-xl font-bold text-gray-800">Edit Product & Images</h3>
+              <form onSubmit={handleUpdateProductDetails} className="space-y-3">
               <div>
                 <label className="block text-xs font-bold text-gray-600 mb-1">Product Name</label>
                 <input
@@ -1959,13 +2085,16 @@ export default function AdminPanel() {
                 </button>
               </div>
             </form>
+            </div>
           </div>
         </div>
       )}
+
       {/* FULL ORDER DETAIL MODAL */}
       {selectedOrder && (
-        <div className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
-          <div className="bg-white rounded-3xl p-6 max-w-4xl w-full shadow-2xl space-y-6 max-h-[92vh] overflow-y-auto border border-rose-100 my-auto">
+        <div className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
+          <div className="bg-white rounded-3xl max-w-4xl w-full shadow-2xl overflow-hidden max-h-[92vh] flex flex-col border border-rose-100 my-auto">
+            <div className="p-6 space-y-6 overflow-y-auto flex-1 custom-scrollbar">
             {/* Modal Header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-gray-100">
               <div>
@@ -2217,6 +2346,7 @@ export default function AdminPanel() {
                 ))}
               </div>
             </div>
+            </div>
           </div>
         </div>
       )}
@@ -2411,6 +2541,7 @@ export default function AdminPanel() {
         </div>
       )}
     </div>
+    </>
   );
 }
 

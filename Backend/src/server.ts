@@ -19,6 +19,9 @@ import accountRoutes from './routes/AccountRoutes.js';
 import adminRoutes from './routes/AdminRoutes.js';
 import uploadRoutes from './routes/UploadRoutes.js';
 import cashfreeRoutes from './routes/CashfreeRoutes.js';
+import wishlistRoutes from './routes/WishlistRoutes.js';
+import reviewRoutes from './routes/ReviewRoutes.js';
+import customizationRequestRoutes from './routes/CustomizationRequestRoutes.js';
 
 const app = express();
 const allowedOrigins = [
@@ -74,6 +77,9 @@ app.use("/api/account", accountRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/upload", uploadRoutes);
 app.use("/api/payments/cashfree", cashfreeRoutes);
+app.use("/api/wishlist", wishlistRoutes);
+app.use("/api/reviews", reviewRoutes);
+app.use("/api/customization-requests", customizationRequestRoutes);
 
 // Error handler must be registered LAST, after all routes
 app.use(errorHandler);

@@ -95,14 +95,75 @@ export const api = {
       method: 'DELETE',
     }),
 
-  // Customer Orders
+  // Customer Orders & Tracking
   createOrder: (orderData) =>
     request('/orders', {
       method: 'POST',
       body: JSON.stringify(orderData),
     }),
-  getMyOrders: () => request('/orders'),
+  getMyOrders: (page = 1, limit = 10) => request(`/orders?page=${page}&limit=${limit}`),
   getOrderById: (id) => request(`/orders/${id}`),
+  guestLookupOrder: (orderId, phone) =>
+    request('/orders/guest-lookup', {
+      method: 'POST',
+      body: JSON.stringify({ orderId, phone }),
+    }),
+  cancelOrder: (id, reason) =>
+    request(`/orders/${id}/cancel`, {
+      method: 'POST',
+      body: JSON.stringify({ reason }),
+    }),
+  reorder: (id) =>
+    request(`/orders/${id}/reorder`, {
+      method: 'POST',
+    }),
+
+  // Wishlist
+  getWishlist: () => request('/wishlist'),
+  toggleWishlist: (productId) =>
+    request('/wishlist/toggle', {
+      method: 'POST',
+      body: JSON.stringify({ productId }),
+    }),
+  moveWishlistToCart: (productId, variantSku) =>
+    request('/wishlist/move-to-cart', {
+      method: 'POST',
+      body: JSON.stringify({ productId, variantSku }),
+    }),
+
+  // Customization Requests Tracker
+  getMyCustomizationRequests: () => request('/customization-requests/my'),
+  getCustomizationByOrder: (orderId) => request(`/customization-requests/order/${orderId}`),
+
+  // Customer Written Reviews
+  getMyReviews: () => request('/reviews/my'),
+  getUnreviewedItems: () => request('/reviews/unreviewed'),
+  createReview: (data) =>
+    request('/reviews', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+  deleteCustomerReview: (id) =>
+    request(`/reviews/${id}`, {
+      method: 'DELETE',
+    }),
+
+  // Security & Notifications
+  updateNotificationPreferences: (data) =>
+    request('/account/notifications', {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
+  changePassword: (data) =>
+    request('/account/change-password', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+  deleteAccountSelfServe: (passwordConfirm) =>
+    request('/account/me', {
+      method: 'DELETE',
+      body: JSON.stringify({ passwordConfirm }),
+    }),
 
   // Site Settings & Coupons
   getSiteSettings: () => request('/admin/settings'),
@@ -145,6 +206,8 @@ export const api = {
       body: JSON.stringify(variantData),
     }),
   deleteProduct: (id) => request(`/products/${id}`, { method: 'DELETE' }),
+  restoreProduct: (id) => request(`/products/${id}/restore`, { method: 'PATCH' }),
+  permanentDeleteProduct: (id) => request(`/products/${id}/permanent`, { method: 'DELETE' }),
   getAdminCategories: () => request('/categories/admin/all'),
   createCategory: (data) => request('/categories', { method: 'POST', body: JSON.stringify(data) }),
   updateCategory: (id, data) => request(`/categories/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),

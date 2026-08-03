@@ -280,7 +280,7 @@ export async function updateProduct(req: Request, res: Response) {
   });
 }
 
-// DELETE /api/products/:id - admin only. Soft delete (keeps order history intact).
+// DELETE /api/products/:id - admin only. Soft delete (deactivates item & moves to History/Archive).
 export async function deleteProduct(req: Request, res: Response) {
   const { id } = req.params;
   const product = await Product.findById(id);
@@ -289,7 +289,33 @@ export async function deleteProduct(req: Request, res: Response) {
   }
   product.isActive = false;
   await product.save();
-  return res.status(200).json({ success: true, message: 'Product deactivated successfully' });
+  return res.status(200).json({ success: true, message: 'Product moved to History & deactivated successfully' });
+}
+
+// PATCH /api/products/:id/restore - admin only. Restore a soft-deleted product back to active status.
+export async function restoreProduct(req: Request, res: Response) {
+  const { id } = req.params;
+  const product = await Product.findById(id);
+  if (!product) {
+    throw new AppError('Product not found', 404);
+  }
+  product.isActive = true;
+  await product.save();
+  return res.status(200).json({
+    success: true,
+    message: 'Product restored to active catalog successfully',
+    data: { product: toProductAdminDetail(product) },
+  });
+}
+
+// DELETE /api/products/:id/permanent - admin only. Hard delete product from database.
+export async function permanentDeleteProduct(req: Request, res: Response) {
+  const { id } = req.params;
+  const product = await Product.findByIdAndDelete(id);
+  if (!product) {
+    throw new AppError('Product not found', 404);
+  }
+  return res.status(200).json({ success: true, message: 'Product permanently deleted' });
 }
 
 // POST /api/products/:id/variants - admin only. Add a new variant to an existing item.

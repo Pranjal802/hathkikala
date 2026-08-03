@@ -82,7 +82,10 @@ const StatusHistorySchema = new Schema<IStatusHistoryEntry>({
 }, { _id: false });
 
 export interface IOrder {
-  userId: Types.ObjectId; // reference - one user has many orders (unbounded, never embed into User)
+  userId?: Types.ObjectId; // Optional for guest orders
+  guestEmail?: string;
+  guestPhone?: string;
+  isGuestOrder?: boolean;
 
   items: IOrderItem[];
   shippingAddress: IShippingAddress;
@@ -121,7 +124,10 @@ export interface IOrder {
 }
 
 const orderSchema = new Schema<IOrder>({
-  userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+  userId: { type: Schema.Types.ObjectId, ref: 'User', required: false },
+  guestEmail: { type: String, lowercase: true, trim: true },
+  guestPhone: { type: String, trim: true },
+  isGuestOrder: { type: Boolean, default: false },
 
   items: [OrderItemSchema],
   shippingAddress: { type: ShippingAddressSchema, required: true },

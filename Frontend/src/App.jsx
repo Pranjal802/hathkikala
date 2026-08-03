@@ -20,6 +20,8 @@ import ContactPage from './pages/ContactPage.jsx';
 import OrdersPage from './pages/OrdersPage.jsx';
 import ProfilePage from './pages/ProfilePage.jsx';
 import AdminStudioPage from './pages/AdminStudioPage.jsx';
+import GuestOrderTrackingPage from './pages/GuestOrderTrackingPage.jsx';
+import WishlistPage from './pages/WishlistPage.jsx';
 
 function App() {
   const location = useLocation();
@@ -46,6 +48,8 @@ function App() {
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/orders" element={<OrdersPage />} />
           <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/track-order" element={<GuestOrderTrackingPage />} />
+          <Route path="/wishlist" element={<WishlistPage />} />
           <Route path="/admin" element={<AdminStudioPage />} />
         </Routes>
       </main>

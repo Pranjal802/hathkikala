@@ -2,6 +2,7 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import User from '../models/User.js';
+import Order from '../models/Order.js';
 import type { Request, Response } from "express";
 import { AppError } from "../utils/AppError.js";
 import type { RegisterDto, LoginDto } from "../dtos/AuthDtos.js";
@@ -11,6 +12,38 @@ import {
   sendVerificationEmail,
   sendPasswordResetEmail,
 } from "../services/emailService.js";
+
+async function autoLinkGuestOrders(userId: any, email?: string, phone?: string) {
+  try {
+    const queryConditions: any[] = [];
+    if (email) queryConditions.push({ guestEmail: email.toLowerCase() });
+    if (phone) queryConditions.push({ guestPhone: phone });
+    if (queryConditions.length === 0) return;
+
+    const count = await Order.countDocuments({
+      isGuestOrder: true,
+      $or: queryConditions,
+    });
+
+    if (count > 0) {
+      console.log(`\n🔗 [AUTO-LINK]: Linking ${count} past guest orders for user ${email || phone}...\n`);
+      await Order.updateMany(
+        {
+          isGuestOrder: true,
+          $or: queryConditions,
+        },
+        {
+          $set: {
+            userId: userId,
+            isGuestOrder: false,
+          },
+        }
+      );
+    }
+  } catch (err) {
+    console.error('Error auto-linking guest orders:', err);
+  }
+}
 
 const isProd = process.env.NODE_ENV === "production";
 const cookieOptions = {
@@ -125,6 +158,9 @@ export async function verifyOtp(req: Request, res: Response) {
   user.set('emailVerificationToken', undefined);
   user.set('emailVerificationExpires', undefined);
   await user.save();
+
+  // Auto-link past guest orders matching user's email or phone
+  await autoLinkGuestOrders(user._id, user.email, user.phone);
 
   // Send Welcome Email upon successful verification
   sendWelcomeEmail(user.email, user.name).catch((err) =>
@@ -279,6 +315,9 @@ export async function googleLogin(req: Request, res: Response) {
     dbUser.isEmailVerified = true;
     await dbUser.save();
   }
+
+  // Auto-link past guest orders matching Google user's email or phone
+  await autoLinkGuestOrders(dbUser._id, dbUser.email, dbUser.phone);
 
   const accessToken = jwt.sign(
     { userId: dbUser._id, email: dbUser.email },

@@ -1,4 +1,5 @@
 import type { Request, Response } from 'express';
+import bcrypt from 'bcryptjs';
 import Cart from '../models/Cart.js';
 import User from '../models/User.js';
 import { toUserResponse } from '../utils/toUserResponse.js';
@@ -197,5 +198,116 @@ export async function setDefaultAddress(req: Request, res: Response) {
     success: true,
     message: 'Default address updated!',
     data: { user: toUserResponse(user) },
+  });
+}
+
+// PATCH /api/account/notifications - Update Notification Preferences
+export async function updateNotificationPreferences(req: Request, res: Response) {
+  const user = req.user;
+  if (!user) {
+    throw new AppError('Authentication required', 401);
+  }
+
+  const { orderUpdatesSms, orderUpdatesWhatsapp, orderUpdatesEmail, promotionalMessages } = req.body;
+
+  if (!user.notificationPreferences) {
+    user.notificationPreferences = {
+      orderUpdatesSms: true,
+      orderUpdatesWhatsapp: true,
+      orderUpdatesEmail: true,
+      promotionalMessages: false,
+    };
+  }
+
+  if (orderUpdatesSms !== undefined) user.notificationPreferences.orderUpdatesSms = Boolean(orderUpdatesSms);
+  if (orderUpdatesWhatsapp !== undefined) user.notificationPreferences.orderUpdatesWhatsapp = Boolean(orderUpdatesWhatsapp);
+  if (orderUpdatesEmail !== undefined) user.notificationPreferences.orderUpdatesEmail = Boolean(orderUpdatesEmail);
+  if (promotionalMessages !== undefined) user.notificationPreferences.promotionalMessages = Boolean(promotionalMessages);
+
+  await user.save();
+
+  return res.status(200).json({
+    success: true,
+    message: 'Notification preferences updated!',
+    data: { user: toUserResponse(user) }
+  });
+}
+
+// POST /api/account/change-password - Change Account Password
+export async function changePassword(req: Request, res: Response) {
+  const user = req.user;
+  if (!user) {
+    throw new AppError('Authentication required', 401);
+  }
+
+  const { currentPassword, newPassword } = req.body;
+  if (!currentPassword || !newPassword) {
+    throw new AppError('Current password and new password are required', 400);
+  }
+
+  if (newPassword.length < 6) {
+    throw new AppError('New password must be at least 6 characters long', 400);
+  }
+
+  const dbUser = await User.findById(user._id).select('+password');
+  if (!dbUser) {
+    throw new AppError('User not found', 404);
+  }
+
+  const isMatch = await bcrypt.compare(currentPassword, dbUser.password);
+  if (!isMatch) {
+    throw new AppError('Current password is incorrect', 400);
+  }
+
+  dbUser.password = await bcrypt.hash(newPassword, 10);
+  await dbUser.save();
+
+  return res.status(200).json({
+    success: true,
+    message: 'Password changed successfully!'
+  });
+}
+
+// DELETE /api/account/me - Self-serve Account Deletion & Data Privacy Anonymization
+export async function deleteAccountSelfServe(req: Request, res: Response) {
+  const user = req.user;
+  if (!user) {
+    throw new AppError('Authentication required', 401);
+  }
+
+  const { passwordConfirm } = req.body;
+  const dbUser = await User.findById(user._id).select('+password');
+  if (!dbUser) {
+    throw new AppError('User not found', 404);
+  }
+
+  if (dbUser.password && passwordConfirm) {
+    const isMatch = await bcrypt.compare(passwordConfirm, dbUser.password);
+    if (!isMatch) {
+      throw new AppError('Password confirmation is incorrect', 400);
+    }
+  }
+
+  // Anonymize personal info while retaining order history for legal accounting
+  dbUser.name = 'Deleted Account';
+  dbUser.email = `deleted_${dbUser._id}@anonymized.local`;
+  dbUser.phone = `000000${Math.floor(1000 + Math.random() * 9000)}`;
+  dbUser.addresses = [];
+  dbUser.isAnonymized = true;
+  dbUser.anonymizedAt = new Date();
+  dbUser.isActive = false;
+
+  await dbUser.save();
+
+  const isProd = process.env.NODE_ENV === 'production';
+  res.clearCookie('token', {
+    httpOnly: true,
+    secure: isProd,
+    sameSite: isProd ? 'none' as const : 'lax' as const,
+  });
+
+  return res.status(200).json({
+    success: true,
+    message: 'Account deleted and personal data anonymized successfully.'
   });
 }

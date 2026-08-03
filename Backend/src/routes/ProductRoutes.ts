@@ -8,6 +8,8 @@ import {
   createProduct,
   updateProduct,
   deleteProduct,
+  restoreProduct,
+  permanentDeleteProduct,
   addVariant,
   updateVariant,
   deleteVariant,
@@ -42,6 +44,8 @@ router.get('/products/:id/admin', protect, restrictTo('admin'), getProductByIdAd
 router.post('/products', protect, restrictTo('admin'), validate(createProductSchema), createProduct);
 router.patch('/products/:id', protect, restrictTo('admin'), validate(updateProductSchema), updateProduct);
 router.delete('/products/:id', protect, restrictTo('admin'), deleteProduct);
+router.patch('/products/:id/restore', protect, restrictTo('admin'), restoreProduct);
+router.delete('/products/:id/permanent', protect, restrictTo('admin'), permanentDeleteProduct);
 
 router.post('/products/:id/variants', protect, restrictTo('admin'), validate(addVariantSchema), addVariant);
 router.patch('/products/:id/variants/:variantId', protect, restrictTo('admin'), validate(updateVariantSchema), updateVariant);

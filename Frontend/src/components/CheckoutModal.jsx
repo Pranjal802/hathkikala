@@ -59,38 +59,10 @@ export default function CheckoutModal() {
   const [paymentScreenshotFile, setPaymentScreenshotFile] = useState(null);
   const [paymentScreenshotPreview, setPaymentScreenshotPreview] = useState('');
 
-  if (!checkoutOpen) return null;
+  const [guestEmail, setGuestEmail] = useState('');
+  const [guestPhone, setGuestPhone] = useState('');
 
-  if (!user) {
-    return (
-      <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-        <div className="bg-white rounded-3xl p-8 max-w-md w-full text-center space-y-4 shadow-2xl">
-          <div className="w-16 h-16 bg-rose-100 rounded-full flex items-center justify-center text-3xl mx-auto text-[#C97C5D]">
-            🔐
-          </div>
-          <h3 className="text-xl font-bold text-gray-800">Please Sign In to Checkout</h3>
-          <p className="text-xs text-gray-500">Sign in to save your order, get instant tracking updates, and manage your account.</p>
-          <div className="flex gap-3 justify-center pt-2">
-            <button
-              onClick={() => setCheckoutOpen(false)}
-              className="px-5 py-2.5 bg-gray-100 text-gray-700 rounded-2xl font-bold text-sm"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={() => {
-                setCheckoutOpen(false);
-                setLoginOpen(true);
-              }}
-              className="px-6 py-2.5 bg-[#C97C5D] text-white rounded-2xl font-bold text-sm shadow hover:bg-[#b0674a]"
-            >
-              Sign In Now
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  if (!checkoutOpen) return null;
 
   const handleFileChange = (e) => {
     const file = e.target.files?.[0];
@@ -130,6 +102,7 @@ export default function CheckoutModal() {
       const payload = {
         shippingAddress: addressForm,
         paymentMethod: selectedProvider,
+        ...(!user ? { guestEmail: guestEmail || `${addressForm.phone}@guest.com`, guestPhone: addressForm.phone || guestPhone } : {}),
         ...(proofUrl ? { paymentProof: proofUrl } : {}),
       };
 

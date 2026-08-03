@@ -40,7 +40,7 @@ export async function createCashfreeOrder(req: Request, res: Response) {
       order_amount: order.totalAmount,
       order_currency: 'INR',
       customer_details: {
-        customer_id: order.userId.toString(),
+        customer_id: order.userId ? order.userId.toString() : `guest_${order._id.toString()}`,
         customer_name: order.shippingAddress.fullName,
         customer_email: req.user?.email || 'customer@hathkikala.com',
         customer_phone: order.shippingAddress.phone.replace(/[^0-9]/g, '').slice(-10) || '9876543210',

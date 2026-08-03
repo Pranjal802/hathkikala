@@ -8,25 +8,25 @@ import { toOrderResponse } from '../utils/toOrderResponse.js';
 import type { CreateOrderDto } from '../dtos/OrderDtos.js';
 import { sendOrderConfirmationEmail, sendShippingUpdateEmail } from '../services/emailService.js';
 
-// POST /api/orders
-// Turns the current user's cart into an Order. The local fallback DB used in
-// development is a single-node MongoDB instance, so multi-document transactions
-// are not available here. To keep the checkout flow correct, we instead:
-//
-// 1. Pre-validate every line item against the current live stock.
-// 2. Decrement stock one variant at a time via atomic findOneAndUpdate.
-// 3. If something fails mid-way, restore each already-decremented variant.
-// 4. Create the order snapshot and clear the cart.
+// POST /api/orders - Support both authenticated user & guest checkout
 export async function createOrder(req: Request, res: Response) {
-  const userId = req.user!._id;
-  const dto = req.body as CreateOrderDto;
+  const userId = req.user?._id;
+  const isGuest = !userId;
+  const dto = req.body as CreateOrderDto & { guestEmail?: string; guestPhone?: string };
 
-  const rawAddress = dto.shippingAddress
-    ? dto.shippingAddress
-    : req.user!.addresses.find((a) => a._id?.toString() === dto.addressId);
+  let rawAddress = dto.shippingAddress;
+  if (!rawAddress && req.user) {
+    rawAddress = req.user.addresses.find((a) => a._id?.toString() === dto.addressId);
+  }
 
   if (!rawAddress) {
-    throw new AppError('Shipping address not found', 400);
+    throw new AppError('Shipping address is required', 400);
+  }
+
+  if (isGuest && (!dto.guestEmail || !dto.guestPhone)) {
+    if (!rawAddress.phone) {
+      throw new AppError('Email and phone number are required for guest checkout', 400);
+    }
   }
 
   const shippingAddress = {
@@ -37,11 +37,18 @@ export async function createOrder(req: Request, res: Response) {
     city: rawAddress.city,
     state: rawAddress.state,
     postalCode: rawAddress.postalCode,
-    country: rawAddress.country,
+    country: rawAddress.country || 'India',
   };
 
-  const cart = await Cart.findOne({ userId });
-  if (!cart || cart.items.length === 0) {
+  let cart = userId ? await Cart.findOne({ userId }) : null;
+  const directItems = req.body.items;
+
+  let itemsToProcess = cart?.items || [];
+  if (itemsToProcess.length === 0 && Array.isArray(directItems) && directItems.length > 0) {
+    itemsToProcess = directItems;
+  }
+
+  if (itemsToProcess.length === 0) {
     throw new AppError('Your cart is empty', 400);
   }
 
@@ -52,7 +59,7 @@ export async function createOrder(req: Request, res: Response) {
   const appliedDecrements: Array<{ productId: mongoose.Types.ObjectId; variantSku: string; quantity: number }> = [];
 
   try {
-    for (const cartItem of cart.items) {
+    for (const cartItem of itemsToProcess) {
       const product = await Product.findById(cartItem.productId);
       if (!product || !product.isActive) {
         throw new AppError('One or more products are no longer available', 409);
@@ -144,8 +151,14 @@ export async function createOrder(req: Request, res: Response) {
     const shippingFee = 0;
     const totalAmount = subtotal + shippingFee;
 
+    const guestEmailVal = dto.guestEmail || (req.user ? req.user.email : rawAddress.phone + '@guest.com');
+    const guestPhoneVal = dto.guestPhone || rawAddress.phone;
+
     const createdOrder = await Order.create({
-      userId,
+      ...(userId ? { userId } : {}),
+      guestEmail: guestEmailVal,
+      guestPhone: guestPhoneVal,
+      isGuestOrder: isGuest,
       items: orderItems,
       shippingAddress,
       payment: {
@@ -158,15 +171,18 @@ export async function createOrder(req: Request, res: Response) {
       subtotal,
       shippingFee,
       totalAmount,
-      status: 'pending' as const,
-      statusHistory: [{ status: 'pending', changedAt: new Date() }],
+      status: 'placed' as const,
+      statusHistory: [{ status: 'placed', changedAt: new Date(), note: 'Order placed successfully' }],
+      ...(req.body.customizationNotes ? { customizationNotes: req.body.customizationNotes } : {}),
     });
 
-    cart.items = [] as typeof cart.items;
-    await cart.save();
+    if (cart) {
+      cart.items = [] as typeof cart.items;
+      await cart.save();
+    }
 
     const formattedOrder = toOrderResponse(createdOrder);
-    sendOrderConfirmationEmail(req.user!.email, formattedOrder).catch((err) =>
+    sendOrderConfirmationEmail(req.user?.email || guestEmailVal, formattedOrder).catch((err) =>
       console.error('Order confirmation email error:', err)
     );
 
@@ -194,12 +210,157 @@ export async function createOrder(req: Request, res: Response) {
   }
 }
 
-// GET /api/orders
-export async function listOrders(req: Request, res: Response) {
-  const orders = await Order.find({ userId: req.user!._id }).sort({ createdAt: -1 });
+// POST /api/orders/guest-lookup - Guest track order using Order ID + Phone Number
+export async function guestLookupOrder(req: Request, res: Response) {
+  const { orderId, phone } = req.body;
+  if (!orderId || !phone) {
+    throw new AppError('Order ID and Phone Number are required', 400);
+  }
+
+  const cleanPhone = phone.trim().replace(/\D/g, '');
+  const cleanOrderId = orderId.trim();
+
+  let query: any = {
+    $or: [
+      { _id: mongoose.isValidObjectId(cleanOrderId) ? new mongoose.Types.ObjectId(cleanOrderId) : null },
+      { 'payment.providerOrderId': cleanOrderId }
+    ].filter((q) => q._id !== null || q['payment.providerOrderId'])
+  };
+
+  let order = await Order.findOne(query);
+
+  if (!order) {
+    throw new AppError('No order found matching this Order ID and Phone number', 404);
+  }
+
+  const orderPhoneClean = (order.shippingAddress?.phone || order.guestPhone || '').replace(/\D/g, '');
+  if (!orderPhoneClean.includes(cleanPhone) && !cleanPhone.includes(orderPhoneClean)) {
+    throw new AppError('No order found matching this Order ID and Phone number', 404);
+  }
+
   return res.status(200).json({
     success: true,
-    data: { orders: orders.map(toOrderResponse) },
+    data: { order: toOrderResponse(order) }
+  });
+}
+
+// GET /api/orders - Paginated order history (10 orders per page)
+export async function listOrders(req: Request, res: Response) {
+  const page = parseInt(req.query.page as string || '1', 10);
+  const limit = parseInt(req.query.limit as string || '10', 10);
+  const skip = (page - 1) * limit;
+
+  const [orders, totalOrders] = await Promise.all([
+    Order.find({ userId: req.user!._id })
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit),
+    Order.countDocuments({ userId: req.user!._id })
+  ]);
+
+  return res.status(200).json({
+    success: true,
+    data: {
+      orders: orders.map(toOrderResponse),
+      pagination: {
+        page,
+        limit,
+        totalOrders,
+        totalPages: Math.ceil(totalOrders / limit) || 1,
+      }
+    },
+  });
+}
+
+// POST /api/orders/:id/cancel - Customer cancel order (Only if Placed or Confirmed)
+export async function cancelOrderCustomer(req: Request, res: Response) {
+  const orderId = req.params.id;
+  const { reason } = req.body;
+
+  const order = await Order.findOne({ _id: orderId, userId: req.user!._id });
+  if (!order) {
+    throw new AppError('Order not found', 404);
+  }
+
+  if (order.status === 'in_production' || order.status === 'shipped' || order.status === 'delivered') {
+    throw new AppError('This item is already being handcrafted for you and can no longer be cancelled.', 400);
+  }
+
+  if (order.status === 'cancelled') {
+    throw new AppError('This order is already cancelled', 400);
+  }
+
+  // Restore inventory stocks for each item in the cancelled order
+  for (const item of order.items) {
+    await Product.findOneAndUpdate(
+      {
+        _id: item.productId,
+        variants: { $elemMatch: { sku: item.variantSku } }
+      },
+      { $inc: { 'variants.$[v].stockQty': item.quantity } },
+      { arrayFilters: [{ 'v.sku': item.variantSku }] }
+    );
+  }
+
+  order.status = 'cancelled';
+  order.cancelReason = reason || 'Cancelled by customer';
+  order.statusHistory.push({
+    status: 'cancelled',
+    changedAt: new Date(),
+    note: `Order cancelled by customer. Reason: ${order.cancelReason}`,
+  });
+
+  await order.save();
+
+  return res.status(200).json({
+    success: true,
+    message: 'Order cancelled successfully',
+    data: { order: toOrderResponse(order) }
+  });
+}
+
+// POST /api/orders/:id/reorder - Add items from past order to active cart
+export async function reorderCustomer(req: Request, res: Response) {
+  const orderId = req.params.id;
+  const userId = req.user!._id;
+
+  const order = await Order.findOne({ _id: orderId, userId });
+  if (!order) {
+    throw new AppError('Order not found', 404);
+  }
+
+  let cart = await Cart.findOne({ userId });
+  if (!cart) {
+    cart = await Cart.create({ userId, items: [] });
+  }
+
+  let addedCount = 0;
+  for (const item of order.items) {
+    const product = await Product.findById(item.productId);
+    if (product && product.isActive) {
+      const variant = product.variants.find((v) => v.sku === item.variantSku && v.isActive);
+      if (variant && variant.stockQty > 0) {
+        const existingCartItem = cart.items.find((i) => i.productId.toString() === item.productId.toString() && i.variantSku === item.variantSku);
+        if (existingCartItem) {
+          existingCartItem.quantity += item.quantity;
+        } else {
+          cart.items.push({
+            productId: item.productId,
+            variantSku: item.variantSku,
+            quantity: Math.min(item.quantity, variant.stockQty),
+          } as any);
+        }
+        addedCount++;
+      }
+    }
+  }
+
+  await cart.save();
+
+  return res.status(200).json({
+    success: true,
+    message: `Added ${addedCount} available item(s) from past order to your cart`,
+    data: { cart }
   });
 }
 

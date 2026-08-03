@@ -282,20 +282,39 @@ export function StoreProvider({ children }) {
     }
   };
 
-  // Wishlist Toggle
-  const toggleWishlist = (product) => {
-    setWishlist((prev) => {
-      const exists = prev.find((i) => i.id === product.id);
-      if (exists) {
-        showNotification(`Removed from wishlist 💔`);
-        return prev.filter((i) => i.id !== product.id);
+  // Wishlist Toggle (Synced with Backend for logged in users)
+  const toggleWishlist = async (product) => {
+    const prodId = product.id || product._id;
+    if (user) {
+      try {
+        const res = await api.toggleWishlist(prodId);
+        if (res.success) {
+          const isSaved = res.data.isSaved;
+          if (isSaved) {
+            setWishlist((prev) => [...prev.filter((i) => (i.id || i._id || i.productId) !== prodId), product]);
+            showNotification(`Added to wishlist 💕`);
+          } else {
+            setWishlist((prev) => prev.filter((i) => (i.id || i._id || i.productId) !== prodId));
+            showNotification(`Removed from wishlist 💔`);
+          }
+        }
+      } catch (err) {
+        showNotification(err.message || 'Wishlist error', 'error');
       }
-      showNotification(`Added to wishlist 💕`);
-      return [...prev, product];
-    });
+    } else {
+      setWishlist((prev) => {
+        const exists = prev.find((i) => (i.id || i._id || i.productId) === prodId);
+        if (exists) {
+          showNotification(`Removed from wishlist 💔`);
+          return prev.filter((i) => (i.id || i._id || i.productId) !== prodId);
+        }
+        showNotification(`Added to wishlist 💕`);
+        return [...prev, product];
+      });
+    }
   };
 
-  const isWishlisted = (id) => wishlist.some((i) => i.id === id);
+  const isWishlisted = (id) => wishlist.some((i) => (i.id || i._id || i.productId) === id);
 
   // Fetch Customer Orders
   const fetchMyOrders = async (shouldOpenModal = false) => {

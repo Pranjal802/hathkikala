@@ -7,22 +7,42 @@ html {
   scroll-behavior: smooth;
 }
 
-/* Custom scrollbar */
+/* Global refined scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 7px;
+  height: 7px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #f5f1e8;
+  background: #F5F1E8;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #6B8E7F;
-  border-radius: 4px;
+  background: #C97C5D;
+  border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #5A7A6D;
+  background: #b0674a;
+}
+
+/* Custom modal & popup sleek scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #C97C5D;
+  border-radius: 9999px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #b0674a;
 }
 
 /* Blob animation */

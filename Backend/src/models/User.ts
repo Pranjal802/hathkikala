@@ -3,11 +3,12 @@ import mongoose, { Schema, type HydratedDocument, Types } from 'mongoose';
 // Embedded sub-shape: an address only makes sense inside a User.
 export interface IAddress {
   _id?: Types.ObjectId;
-  label: string; // e.g. "Home", "Work"
+  label: string; // e.g. "Home", "Work", "Other"
   fullName: string;
   phone: string;
   line1: string;
   line2?: string;
+  landmark?: string;
   city: string;
   state: string;
   postalCode: string;
@@ -21,12 +22,20 @@ const AddressSchema = new Schema<IAddress>({
   phone: { type: String, required: true },
   line1: { type: String, required: true },
   line2: { type: String },
+  landmark: { type: String },
   city: { type: String, required: true },
   state: { type: String, required: true },
   postalCode: { type: String, required: true },
   country: { type: String, required: true, default: 'India' },
   isDefault: { type: Boolean, default: false },
 }, { _id: true });
+
+export interface INotificationPreferences {
+  orderUpdatesSms: boolean;
+  orderUpdatesWhatsapp: boolean;
+  orderUpdatesEmail: boolean;
+  promotionalMessages: boolean;
+}
 
 // Plain data shape - use this everywhere except when you actually have
 // a fetched Mongoose document in hand.
@@ -36,6 +45,7 @@ export interface IUser {
   email: string;
   phone: string;
   password: string;
+  profilePhoto?: string;
 
   role: 'customer' | 'admin' | 'user';
 
@@ -47,9 +57,14 @@ export interface IUser {
   passwordResetToken?: string;
   passwordResetExpires?: Date;
 
+  notificationPreferences: INotificationPreferences;
+
   refreshTokens: string[];
 
   addresses: IAddress[];
+
+  isAnonymized?: boolean;
+  anonymizedAt?: Date;
 
   isActive: boolean;
 }
@@ -60,6 +75,7 @@ const userSchema = new Schema<IUser>({
   email: { type: String, required: true, unique: true, lowercase: true, trim: true },
   phone: { type: String, required: true, unique: true, trim: true },
   password: { type: String, required: true }, // store bcrypt hash, never plain text
+  profilePhoto: { type: String },
 
   role: { type: String, enum: ['customer', 'admin', 'user'], default: 'customer' },
 
@@ -71,9 +87,19 @@ const userSchema = new Schema<IUser>({
   passwordResetToken: { type: String, select: false },
   passwordResetExpires: { type: Date, select: false },
 
+  notificationPreferences: {
+    orderUpdatesSms: { type: Boolean, default: true },
+    orderUpdatesWhatsapp: { type: Boolean, default: true },
+    orderUpdatesEmail: { type: Boolean, default: true },
+    promotionalMessages: { type: Boolean, default: false },
+  },
+
   refreshTokens: [{ type: String, select: false }],
 
   addresses: [AddressSchema],
+
+  isAnonymized: { type: Boolean, default: false },
+  anonymizedAt: { type: Date },
 
   isActive: { type: Boolean, default: true },
 }, { timestamps: true });

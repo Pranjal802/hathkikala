@@ -11,6 +11,8 @@ import {
   PackageCheck,
   LogOut,
   ShieldCheck,
+  Sparkles,
+  MapPin,
 } from "lucide-react";
 
 const BRAND_NAME = "हाथ की कला";
@@ -73,12 +75,13 @@ export default function Navbar() {
           </div>
         </Link>
 
-        {/* Desktop Router Nav Links */}
-        <div className="hidden md:flex items-center gap-9">
+        {/* Desktop Router Nav Links with Active Indicator Effect */}
+        <div className="hidden md:flex items-center gap-2 lg:gap-4">
           {NAV_LINKS.map((link) => (
             <NavLink
               key={link.name}
               to={link.path}
+              end={link.path === '/'}
               onClick={(e) => {
                 if (link.targetId) {
                   const el = document.getElementById(link.targetId);
@@ -89,12 +92,21 @@ export default function Navbar() {
                 }
               }}
               className={({ isActive }) =>
-                `relative text-sm font-medium transition-colors duration-300 ${
-                  isActive ? "text-[#C97C5D] font-bold" : "text-[#5A5A5A] hover:text-[#4F6B5C]"
+                `relative px-3.5 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
+                  isActive
+                    ? "text-[#C97C5D] font-extrabold bg-[#C97C5D]/10 shadow-inner"
+                    : "text-[#5A5A5A] hover:text-[#4F6B5C] hover:bg-[#E8DDD0]/50"
                 }`
               }
             >
-              {link.name}
+              {({ isActive }) => (
+                <span className="relative inline-block">
+                  {link.name}
+                  {isActive && (
+                    <span className="absolute -bottom-1 left-0 right-0 h-[2.5px] bg-gradient-to-r from-[#C97C5D] via-[#D8A7B1] to-[#C97C5D] rounded-full shadow-sm animate-fadeIn" />
+                  )}
+                </span>
+              )}
             </NavLink>
           ))}
         </div>
@@ -130,7 +142,7 @@ export default function Navbar() {
             {user ? (
               <button
                 onClick={() => setAccountMenuOpen(!accountMenuOpen)}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-50 border border-rose-200 rounded-full text-xs font-bold text-[#C97C5D] hover:bg-rose-100 transition"
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-50 border border-rose-200 rounded-full text-xs font-bold text-[#C97C5D] hover:bg-rose-100 transition shadow-sm"
               >
                 <User className="w-3.5 h-3.5" /> {user.name?.split(' ')[0] || 'Account'}
               </button>
@@ -145,7 +157,7 @@ export default function Navbar() {
 
             {/* Account Dropdown */}
             {accountMenuOpen && user && (
-              <div className="absolute right-0 mt-2 w-48 bg-white rounded-2xl shadow-xl border border-rose-100 py-2 z-50 animate-fadeIn">
+              <div className="absolute right-0 mt-2 w-52 bg-white rounded-2xl shadow-xl border border-rose-100 py-2 z-50 animate-fadeIn">
                 <div className="px-4 py-2 border-b border-gray-100">
                   <p className="text-xs font-bold text-gray-800 truncate">{user.name || user.email}</p>
                   <p className="text-[10px] text-gray-400 truncate">{user.email}</p>
@@ -160,11 +172,19 @@ export default function Navbar() {
                 </Link>
 
                 <Link
-                  to="/orders"
+                  to="/wishlist"
                   onClick={() => setAccountMenuOpen(false)}
                   className="w-full px-4 py-2 text-left text-xs font-semibold text-gray-700 hover:bg-rose-50 flex items-center gap-2"
                 >
-                  <PackageCheck className="w-4 h-4 text-[#C97C5D]" /> My Orders
+                  <Sparkles className="w-4 h-4 text-[#C97C5D]" /> My Wishlist
+                </Link>
+
+                <Link
+                  to="/track-order"
+                  onClick={() => setAccountMenuOpen(false)}
+                  className="w-full px-4 py-2 text-left text-xs font-semibold text-gray-700 hover:bg-rose-50 flex items-center gap-2"
+                >
+                  <PackageCheck className="w-4 h-4 text-[#9CAF88]" /> Track Order
                 </Link>
 
                 {user.role === "admin" && (
@@ -210,11 +230,12 @@ export default function Navbar() {
           isOpen ? "max-h-96 border-b border-[#E8DDD0]" : "max-h-0"
         }`}
       >
-        <div className="bg-[#F5F1E8] px-6 py-5 flex flex-col gap-4">
+        <div className="bg-[#F5F1E8] px-6 py-5 flex flex-col gap-2">
           {NAV_LINKS.map((link) => (
             <NavLink
               key={link.name}
               to={link.path}
+              end={link.path === '/'}
               onClick={(e) => {
                 setIsOpen(false);
                 if (link.targetId) {
@@ -226,18 +247,41 @@ export default function Navbar() {
                 }
               }}
               className={({ isActive }) =>
-                `text-sm font-medium transition-colors ${
-                  isActive ? "text-[#C97C5D] font-bold" : "text-[#5A5A5A]"
+                `text-sm font-medium transition-all duration-200 px-3 py-2 rounded-xl ${
+                  isActive
+                    ? "bg-rose-50/80 border-l-4 border-[#C97C5D] text-[#C97C5D] font-extrabold shadow-sm"
+                    : "text-[#5A5A5A] hover:bg-[#E8DDD0]/50"
                 }`
               }
             >
               {link.name}
             </NavLink>
           ))}
+          
+          <NavLink
+            to="/profile"
+            onClick={() => setIsOpen(false)}
+            className={({ isActive }) =>
+              `text-sm font-medium transition-all duration-200 px-3 py-2 rounded-xl ${
+                isActive
+                  ? "bg-rose-50/80 border-l-4 border-[#C97C5D] text-[#C97C5D] font-extrabold shadow-sm"
+                  : "text-[#5A5A5A] hover:bg-[#E8DDD0]/50"
+              }`
+            }
+          >
+            My Profile & Addresses
+          </NavLink>
+
           <NavLink
             to="/orders"
             onClick={() => setIsOpen(false)}
-            className="text-sm font-medium text-[#5A5A5A]"
+            className={({ isActive }) =>
+              `text-sm font-medium transition-all duration-200 px-3 py-2 rounded-xl ${
+                isActive
+                  ? "bg-rose-50/80 border-l-4 border-[#C97C5D] text-[#C97C5D] font-extrabold shadow-sm"
+                  : "text-[#5A5A5A] hover:bg-[#E8DDD0]/50"
+              }`
+            }
           >
             My Orders
           </NavLink>
