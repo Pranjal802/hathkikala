@@ -21,6 +21,8 @@ export default function OrdersModal() {
 
   const getStatusBadge = (status) => {
     switch (status) {
+      case 'confirmed':
+        return <span className="px-3 py-1 bg-emerald-100 text-emerald-800 rounded-full font-bold text-xs flex items-center gap-1"><CheckCircle className="w-3 h-3 text-emerald-600" /> Confirmed</span>;
       case 'delivered':
         return <span className="px-3 py-1 bg-emerald-100 text-emerald-800 rounded-full font-bold text-xs flex items-center gap-1"><CheckCircle className="w-3 h-3" /> Delivered</span>;
       case 'shipped':

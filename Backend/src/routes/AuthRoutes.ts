@@ -1,13 +1,13 @@
 import { Router } from 'express';
-import { signup, login, logout, verifyOtp, resendOtp, forgotPassword } from '../controllers/AuthControllers.js';
+import { signup, login, logout, verifyOtp, resendOtp, forgotPassword, googleLogin } from '../controllers/AuthControllers.js';
 import { validate } from '../middleware/validate.js';
 import { registerSchema, loginSchema } from '../dtos/AuthDtos.js';
-import { protect } from '../middleware/protect.js';
 
 const router = Router();
 
 // Public routes
 router.post('/register', validate(registerSchema), signup);
+router.post('/google', googleLogin);
 router.post('/verify-otp', verifyOtp);
 router.post('/resend-otp', resendOtp);
 router.post('/login', validate(loginSchema), login);

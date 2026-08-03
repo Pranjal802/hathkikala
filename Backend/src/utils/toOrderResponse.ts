@@ -32,6 +32,7 @@ export function toOrderResponse(order: OrderDocument) {
       provider: order.payment.provider,
       providerOrderId: order.payment.providerOrderId ?? null,
       providerPaymentId: order.payment.providerPaymentId ?? null,
+      paymentProof: (order.payment as any).paymentProof ?? null,
       status: order.payment.status,
       amount: order.payment.amount,
       currency: order.payment.currency,

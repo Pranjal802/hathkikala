@@ -230,3 +230,68 @@ export async function forgotPassword(req: Request, res: Response) {
     message: `Password reset instructions sent to ${user.email}`,
   });
 }
+
+// POST /api/auth/google - Authenticate using Google OAuth ID token
+export async function googleLogin(req: Request, res: Response) {
+  const { idToken, credential } = req.body;
+  const token = idToken || credential;
+
+  if (!token) {
+    throw new AppError("Google token is required", 400);
+  }
+
+  // Verify ID token via Google TokenInfo API
+  const googleRes = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(token)}`);
+  if (!googleRes.ok) {
+    throw new AppError("Invalid or expired Google token", 400);
+  }
+
+  const payload = (await googleRes.json()) as { email?: string; name?: string; sub?: string };
+  const { email, name } = payload;
+
+  if (!email) {
+    throw new AppError("Unable to retrieve email from Google Account", 400);
+  }
+
+  let dbUser = await User.findOne({ email });
+  if (!dbUser) {
+    // Create new account for Google user
+    const randomPassword = crypto.randomBytes(16).toString('hex');
+    const hashedPassword = await bcrypt.hash(randomPassword, 10);
+    const generatedPhone = `9${Math.floor(100000000 + Math.random() * 900000000)}`;
+    const userDisplayName: string = (name && typeof name === 'string') ? name : (email.split('@')[0] || 'Customer');
+
+    const createdUser = await User.create({
+      name: userDisplayName,
+      email: email,
+      phone: generatedPhone,
+      password: hashedPassword,
+      isEmailVerified: true,
+      role: 'customer' as const,
+    });
+
+    dbUser = createdUser;
+
+    sendWelcomeEmail(createdUser.email, createdUser.name).catch((err) =>
+      console.error('Welcome email error:', err)
+    );
+  } else if (!dbUser.isEmailVerified) {
+    dbUser.isEmailVerified = true;
+    await dbUser.save();
+  }
+
+  const accessToken = jwt.sign(
+    { userId: dbUser._id, email: dbUser.email },
+    process.env.JWT_SECRET as string,
+    { expiresIn: process.env.JWT_EXPIRES_IN || "7d" } as jwt.SignOptions
+  );
+
+  return res
+    .status(200)
+    .cookie("token", accessToken, cookieOptions)
+    .json({
+      success: true,
+      message: "Google login successful! Welcome to Hath Ki Kala!",
+      data: { user: toUserResponse(dbUser) },
+    });
+}

@@ -1,11 +1,13 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Mail, Lock, User, Eye, EyeOff, Sparkles, Heart, ShieldCheck, RefreshCw } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
 import { api } from '../services/api';
 
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '525544862520-i9nt4oigpkl7gmddbe1jimrb306jc541.apps.googleusercontent.com';
+
 export default function LoginModal() {
-  const { loginOpen, setLoginOpen, login, signup, verifyOtp, showNotification, setUser } = useStore();
+  const { loginOpen, setLoginOpen, login, signup, googleLogin, verifyOtp, showNotification } = useStore();
   const [tab, setTab] = useState('login'); // 'login' | 'register' | 'verify-otp'
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -19,6 +21,58 @@ export default function LoginModal() {
     password: '',
   });
 
+  // Initialize Google Sign-In SDK
+  useEffect(() => {
+    if (!loginOpen || tab === 'verify-otp') return;
+
+    const initGoogle = () => {
+      if (window.google?.accounts?.id) {
+        try {
+          window.google.accounts.id.initialize({
+            client_id: GOOGLE_CLIENT_ID,
+            callback: async (response) => {
+              if (response.credential) {
+                setLoading(true);
+                try {
+                  await googleLogin(response.credential);
+                } catch (err) {
+                  showNotification(err.message || 'Google Authentication failed', 'error');
+                } finally {
+                  setLoading(false);
+                }
+              }
+            },
+          });
+
+          const container = document.getElementById('google-signin-container');
+          if (container) {
+            container.innerHTML = '';
+            window.google.accounts.id.renderButton(container, {
+              theme: 'outline',
+              size: 'large',
+              width: 320,
+              text: tab === 'login' ? 'signin_with' : 'signup_with',
+              shape: 'pill',
+            });
+          }
+        } catch (e) {
+          console.warn('Google Auth init note:', e);
+        }
+      }
+    };
+
+    if (!window.google?.accounts?.id) {
+      const script = document.createElement('script');
+      script.src = 'https://accounts.google.com/gsi/client';
+      script.async = true;
+      script.defer = true;
+      script.onload = initGoogle;
+      document.body.appendChild(script);
+    } else {
+      setTimeout(initGoogle, 100);
+    }
+  }, [loginOpen, tab, googleLogin, showNotification]);
+
   if (!loginOpen) return null;
 
   const handleSubmit = async (e) => {
@@ -31,7 +85,7 @@ export default function LoginModal() {
         const res = await signup({
           name: form.name || form.email.split('@')[0],
           email: form.email,
-          phone: form.phone || '9876543210',
+          phone: form.phone,
           password: form.password,
         });
 
@@ -56,7 +110,7 @@ export default function LoginModal() {
 
   const handleVerifyOtp = async (e) => {
     e.preventDefault();
-    if (!otpCode || otpCode.length < 4) {
+    if (!otpCode || otpCode.length < 6) {
       showNotification('Please enter a valid 6-digit OTP code', 'error');
       return;
     }
@@ -204,74 +258,86 @@ export default function LoginModal() {
                   </div>
                 </form>
               ) : (
-                <form className="px-6 py-5 space-y-3" onSubmit={handleSubmit}>
-                  {tab === 'register' && (
-                    <>
-                      <div className="relative">
-                        <User size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#D8A7B1]" />
-                        <input
-                          type="text"
-                          placeholder="Full Name"
-                          value={form.name}
-                          onChange={(e) => setForm({ ...form, name: e.target.value })}
-                          required
-                          className="w-full bg-[#F5E6DA] pl-11 pr-4 py-3 rounded-2xl font-sans text-sm text-[#3E2C23] placeholder-[#5C4033]/40 focus:outline-none focus:ring-2 focus:ring-[#D8A7B1]"
-                        />
-                      </div>
-
-                      <div className="relative">
-                        <User size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#D8A7B1]" />
-                        <input
-                          type="tel"
-                          placeholder="Phone Number"
-                          value={form.phone}
-                          onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                          required
-                          className="w-full bg-[#F5E6DA] pl-11 pr-4 py-3 rounded-2xl font-sans text-sm text-[#3E2C23] placeholder-[#5C4033]/40 focus:outline-none focus:ring-2 focus:ring-[#D8A7B1]"
-                        />
-                      </div>
-                    </>
-                  )}
-
-                  <div className="relative">
-                    <Mail size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#D8A7B1]" />
-                    <input
-                      type="email"
-                      placeholder="Email address"
-                      value={form.email}
-                      onChange={(e) => setForm({ ...form, email: e.target.value })}
-                      required
-                      className="w-full bg-[#F5E6DA] pl-11 pr-4 py-3 rounded-2xl font-sans text-sm text-[#3E2C23] placeholder-[#5C4033]/40 focus:outline-none focus:ring-2 focus:ring-[#D8A7B1]"
-                    />
+                <div className="px-6 py-5 space-y-4">
+                  
+                  {/* Google Login Section */}
+                  <div className="flex flex-col items-center space-y-2 pb-1 border-b border-rose-100">
+                    <div id="google-signin-container" className="flex justify-center w-full min-h-[44px]"></div>
+                    <div className="relative w-full text-center my-2">
+                      <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-200"></div></div>
+                      <span className="relative bg-[#FFF8F2] px-3 text-[11px] font-bold text-gray-400 uppercase">or continue with email</span>
+                    </div>
                   </div>
 
-                  <div className="relative">
-                    <Lock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#D8A7B1]" />
-                    <input
-                      type={showPass ? 'text' : 'password'}
-                      placeholder="Password"
-                      value={form.password}
-                      onChange={(e) => setForm({ ...form, password: e.target.value })}
-                      required
-                      className="w-full bg-[#F5E6DA] pl-11 pr-11 py-3 rounded-2xl font-sans text-sm text-[#3E2C23] placeholder-[#5C4033]/40 focus:outline-none focus:ring-2 focus:ring-[#D8A7B1]"
-                    />
+                  <form className="space-y-3" onSubmit={handleSubmit}>
+                    {tab === 'register' && (
+                      <>
+                        <div className="relative">
+                          <User size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#D8A7B1]" />
+                          <input
+                            type="text"
+                            placeholder="Full Name"
+                            value={form.name}
+                            onChange={(e) => setForm({ ...form, name: e.target.value })}
+                            required
+                            className="w-full bg-[#F5E6DA] pl-11 pr-4 py-3 rounded-2xl font-sans text-sm text-[#3E2C23] placeholder-[#5C4033]/40 focus:outline-none focus:ring-2 focus:ring-[#D8A7B1]"
+                          />
+                        </div>
+
+                        <div className="relative">
+                          <User size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#D8A7B1]" />
+                          <input
+                            type="tel"
+                            placeholder="Phone Number"
+                            value={form.phone}
+                            onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                            required
+                            className="w-full bg-[#F5E6DA] pl-11 pr-4 py-3 rounded-2xl font-sans text-sm text-[#3E2C23] placeholder-[#5C4033]/40 focus:outline-none focus:ring-2 focus:ring-[#D8A7B1]"
+                          />
+                        </div>
+                      </>
+                    )}
+
+                    <div className="relative">
+                      <Mail size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#D8A7B1]" />
+                      <input
+                        type="email"
+                        placeholder="Email address"
+                        value={form.email}
+                        onChange={(e) => setForm({ ...form, email: e.target.value })}
+                        required
+                        className="w-full bg-[#F5E6DA] pl-11 pr-4 py-3 rounded-2xl font-sans text-sm text-[#3E2C23] placeholder-[#5C4033]/40 focus:outline-none focus:ring-2 focus:ring-[#D8A7B1]"
+                      />
+                    </div>
+
+                    <div className="relative">
+                      <Lock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#D8A7B1]" />
+                      <input
+                        type={showPass ? 'text' : 'password'}
+                        placeholder="Password"
+                        value={form.password}
+                        onChange={(e) => setForm({ ...form, password: e.target.value })}
+                        required
+                        className="w-full bg-[#F5E6DA] pl-11 pr-11 py-3 rounded-2xl font-sans text-sm text-[#3E2C23] placeholder-[#5C4033]/40 focus:outline-none focus:ring-2 focus:ring-[#D8A7B1]"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPass((v) => !v)}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-[#D8A7B1] hover:text-[#C97C5D] transition-colors"
+                      >
+                        {showPass ? <EyeOff size={15} /> : <Eye size={15} />}
+                      </button>
+                    </div>
+
                     <button
-                      type="button"
-                      onClick={() => setShowPass((v) => !v)}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-[#D8A7B1] hover:text-[#C97C5D] transition-colors"
+                      type="submit"
+                      disabled={loading}
+                      className="w-full bg-gradient-to-r from-[#C97C5D] to-[#D8A7B1] text-white py-3.5 rounded-2xl font-sans font-bold shadow-md hover:shadow-lg transition-all disabled:opacity-50 mt-2"
                     >
-                      {showPass ? <EyeOff size={15} /> : <Eye size={15} />}
+                      {loading ? 'Authenticating...' : tab === 'login' ? 'Sign In' : 'Create Account & Get OTP'}
                     </button>
-                  </div>
-
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="w-full bg-gradient-to-r from-[#C97C5D] to-[#D8A7B1] text-white py-3.5 rounded-2xl font-sans font-bold shadow-md hover:shadow-lg transition-all disabled:opacity-50 mt-2"
-                  >
-                    {loading ? 'Authenticating...' : tab === 'login' ? 'Sign In' : 'Create Account & Get OTP'}
-                  </button>
-                </form>
+                  </form>
+                </div>
               )}
             </div>
           </motion.div>

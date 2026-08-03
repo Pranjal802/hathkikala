@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { useStore } from '../context/StoreContext.jsx';
 import { api } from '../services/api.js';
-import { X, CheckCircle2, ShieldCheck, Truck, CreditCard, ArrowRight } from 'lucide-react';
+import { X, CheckCircle2, ShieldCheck, Truck, CreditCard, ArrowRight, QrCode, Upload, Smartphone, AlertCircle, Loader2 } from 'lucide-react';
 import { load } from '@cashfreepayments/cashfree-js';
+
+const UPI_ID = import.meta.env.VITE_UPI_ID || '9313729507@hdfc';
 
 export default function CheckoutModal() {
   const {
@@ -19,22 +21,43 @@ export default function CheckoutModal() {
     setCart,
   } = useStore();
 
-  const [step, setStep] = useState('address'); // 'address' | 'confirmation'
+  const [step, setStep] = useState('address'); // 'address' | 'upi_verification' | 'confirmation'
   const [createdOrder, setCreatedOrder] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [uploadingProof, setUploadingProof] = useState(false);
 
-  const [addressForm, setAddressForm] = useState({
-    fullName: user?.email ? user.email.split('@')[0] : '',
-    phone: '9876543210',
-    line1: 'Flat 402, Sunshine Apartments',
-    line2: 'Bandra West',
-    city: 'Mumbai',
-    state: 'Maharashtra',
-    postalCode: '400050',
-    country: 'India',
+  // Address form - empty by default unless user has saved addresses
+  const [addressForm, setAddressForm] = useState(() => {
+    const defaultAddr = user?.addresses?.find((a) => a.isDefault) || user?.addresses?.[0];
+    if (defaultAddr) {
+      return {
+        fullName: defaultAddr.fullName || user?.name || '',
+        phone: defaultAddr.phone || user?.phone || '',
+        line1: defaultAddr.line1 || '',
+        line2: defaultAddr.line2 || '',
+        city: defaultAddr.city || '',
+        state: defaultAddr.state || '',
+        postalCode: defaultAddr.postalCode || '',
+        country: defaultAddr.country || 'India',
+      };
+    }
+    return {
+      fullName: user?.name || (user?.email ? user.email.split('@')[0] : ''),
+      phone: user?.phone || '',
+      line1: '',
+      line2: '',
+      city: '',
+      state: '',
+      postalCode: '',
+      country: 'India',
+    };
   });
 
-  const [paymentMethod, setPaymentMethod] = useState('cashfree'); // 'cod' | 'cashfree'
+  const [paymentMethod, setPaymentMethod] = useState('upi_qr'); // 'upi_qr' | 'cashfree' | 'cod'
+
+  // Payment screenshot upload state
+  const [paymentScreenshotFile, setPaymentScreenshotFile] = useState(null);
+  const [paymentScreenshotPreview, setPaymentScreenshotPreview] = useState('');
 
   if (!checkoutOpen) return null;
 
@@ -69,11 +92,22 @@ export default function CheckoutModal() {
     );
   }
 
-  const handlePlaceOrder = async (e) => {
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (!file.type.startsWith('image/')) {
+        showNotification('Please select a valid image file for the screenshot', 'error');
+        return;
+      }
+      setPaymentScreenshotFile(file);
+      setPaymentScreenshotPreview(URL.createObjectURL(file));
+    }
+  };
+
+  const handleAddressSubmit = (e) => {
     e.preventDefault();
-    if (!user) {
-      showNotification('Please sign in or create an account to complete your order', 'error');
-      setLoginOpen(true);
+    if (!addressForm.fullName || !addressForm.phone || !addressForm.line1 || !addressForm.city || !addressForm.state || !addressForm.postalCode) {
+      showNotification('Please fill in all required shipping address fields', 'error');
       return;
     }
 
@@ -82,12 +116,21 @@ export default function CheckoutModal() {
       return;
     }
 
+    if (paymentMethod === 'upi_qr') {
+      setStep('upi_verification');
+    } else {
+      executeOrderPlacement(null);
+    }
+  };
+
+  const executeOrderPlacement = async (proofUrl) => {
     setLoading(true);
     try {
-      const selectedProvider = (paymentMethod === 'cashfree' || paymentMethod === 'online') ? 'cashfree' : 'cod';
+      const selectedProvider = paymentMethod === 'upi_qr' ? 'upi_qr' : (paymentMethod === 'cashfree' || paymentMethod === 'online') ? 'cashfree' : 'cod';
       const payload = {
         shippingAddress: addressForm,
         paymentMethod: selectedProvider,
+        ...(proofUrl ? { paymentProof: proofUrl } : {}),
       };
 
       const res = await api.createOrder(payload);
@@ -123,7 +166,11 @@ export default function CheckoutModal() {
         setCreatedOrder(order);
         setCart([]);
         setStep('confirmation');
-        showNotification('Order placed successfully! 🎉');
+        if (selectedProvider === 'upi_qr') {
+          showNotification('Payment proof submitted! Order placed successfully. 🎉');
+        } else {
+          showNotification('Order placed successfully! 🎉');
+        }
       }
     } catch (err) {
       showNotification(err.message || 'Failed to place order', 'error');
@@ -131,6 +178,35 @@ export default function CheckoutModal() {
       setLoading(false);
     }
   };
+
+  const handleConfirmUpiPayment = async (e) => {
+    e.preventDefault();
+    if (!paymentScreenshotFile) {
+      showNotification('Please upload your payment screenshot before placing the order!', 'error');
+      return;
+    }
+
+    setUploadingProof(true);
+    try {
+      const formData = new FormData();
+      formData.append('image', paymentScreenshotFile);
+      formData.append('folder', 'handmade/payment_proofs');
+
+      const uploadRes = await api.uploadPaymentProof(formData);
+      const proofUrl = uploadRes?.data?.url || uploadRes?.data?.secure_url;
+      if (!proofUrl) {
+        throw new Error('Failed to upload payment screenshot. Please try again.');
+      }
+
+      await executeOrderPlacement(proofUrl);
+    } catch (err) {
+      showNotification(err.message || 'Failed to upload screenshot', 'error');
+    } finally {
+      setUploadingProof(false);
+    }
+  };
+
+  const upiDeepLink = `upi://pay?pa=${encodeURIComponent(UPI_ID)}&pn=${encodeURIComponent('Hath Ki Kala')}&am=${cartTotal}&cu=INR&tn=${encodeURIComponent('Order Payment')}`;
 
   return (
     <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto animate-fadeIn">
@@ -140,7 +216,9 @@ export default function CheckoutModal() {
         <div className="bg-gradient-to-r from-[#C97C5D] to-[#D8A7B1] px-6 py-4 text-white flex items-center justify-between">
           <div className="flex items-center gap-2">
             <ShieldCheck className="w-5 h-5" />
-            <h3 className="font-extrabold text-lg">Secure Checkout</h3>
+            <h3 className="font-extrabold text-lg">
+              {step === 'upi_verification' ? 'Payment Verification' : step === 'confirmation' ? 'Order Placed' : 'Secure Checkout'}
+            </h3>
           </div>
           <button
             onClick={() => setCheckoutOpen(false)}
@@ -150,8 +228,8 @@ export default function CheckoutModal() {
           </button>
         </div>
 
-        {step === 'address' ? (
-          <form onSubmit={handlePlaceOrder} className="p-6 space-y-6">
+        {step === 'address' && (
+          <form onSubmit={handleAddressSubmit} className="p-6 space-y-6">
             
             {/* Order Summary Box */}
             <div className="bg-rose-50/50 p-4 rounded-2xl border border-rose-100 space-y-2 text-sm">
@@ -240,39 +318,88 @@ export default function CheckoutModal() {
             {/* Payment Method Selection */}
             <div className="space-y-3">
               <h4 className="font-bold text-gray-800 text-sm flex items-center gap-2">
-                <CreditCard className="w-4 h-4 text-[#C97C5D]" /> Payment Options
+                <CreditCard className="w-4 h-4 text-[#C97C5D]" /> Select Payment Method
               </h4>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {/* UPI QR Payment Option */}
+                <label
+                  onClick={() => setPaymentMethod('upi_qr')}
+                  className={`p-3 rounded-2xl border flex items-center gap-3 cursor-pointer transition ${
+                    paymentMethod === 'upi_qr' ? 'border-[#C97C5D] bg-rose-50/70 shadow-sm' : 'border-gray-200 hover:bg-gray-50'
+                  }`}
+                >
+                  <input type="radio" name="payment" checked={paymentMethod === 'upi_qr'} onChange={() => {}} className="accent-[#C97C5D]" />
+                  <div>
+                    <p className="font-bold text-sm text-gray-800 flex items-center gap-1">
+                      <QrCode className="w-4 h-4 text-[#C97C5D]" /> Bank QR / UPI
+                    </p>
+                    <p className="text-[11px] text-emerald-700 font-semibold">GPay, PhonePe, Paytm</p>
+                  </div>
+                </label>
+
+                {/* Cashfree Pay */}
+                <label
+                  onClick={() => setPaymentMethod('cashfree')}
+                  className={`p-3 rounded-2xl border flex items-center gap-3 cursor-pointer transition ${
+                    paymentMethod === 'cashfree' ? 'border-[#C97C5D] bg-rose-50/70 shadow-sm' : 'border-gray-200 hover:bg-gray-50'
+                  }`}
+                >
+                  <input type="radio" name="payment" checked={paymentMethod === 'cashfree'} onChange={() => {}} className="accent-[#C97C5D]" />
+                  <div>
+                    <p className="font-bold text-sm text-gray-800">Cashfree Pay</p>
+                    <p className="text-[11px] text-gray-500">Cards & NetBanking</p>
+                  </div>
+                </label>
+
+                {/* Cash on Delivery */}
                 <label
                   onClick={() => setPaymentMethod('cod')}
                   className={`p-3 rounded-2xl border flex items-center gap-3 cursor-pointer transition ${
-                    paymentMethod === 'cod' ? 'border-[#C97C5D] bg-rose-50/50 shadow-sm' : 'border-gray-200 hover:bg-gray-50'
+                    paymentMethod === 'cod' ? 'border-[#C97C5D] bg-rose-50/70 shadow-sm' : 'border-gray-200 hover:bg-gray-50'
                   }`}
                 >
                   <input type="radio" name="payment" checked={paymentMethod === 'cod'} onChange={() => {}} className="accent-[#C97C5D]" />
                   <div>
                     <p className="font-bold text-sm text-gray-800">Cash on Delivery</p>
-                    <p className="text-xs text-gray-400">Pay when delivered</p>
-                  </div>
-                </label>
-
-                <label
-                  onClick={() => setPaymentMethod('cashfree')}
-                  className={`p-3 rounded-2xl border flex items-center gap-3 cursor-pointer transition ${
-                    (paymentMethod === 'cashfree' || paymentMethod === 'online') ? 'border-[#C97C5D] bg-rose-50/50 shadow-sm' : 'border-gray-200 hover:bg-gray-50'
-                  }`}
-                >
-                  <input type="radio" name="payment" checked={paymentMethod === 'cashfree' || paymentMethod === 'online'} onChange={() => {}} className="accent-[#C97C5D]" />
-                  <div>
-                    <p className="font-bold text-sm text-gray-800 flex items-center gap-1.5">
-                      Cashfree Pay <span className="text-[10px] bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded font-extrabold">UPI & Cards</span>
-                    </p>
-                    <p className="text-xs text-gray-400">GPay, PhonePe, Cards, NetBanking</p>
+                    <p className="text-[11px] text-gray-500">Pay when delivered</p>
                   </div>
                 </label>
               </div>
             </div>
+
+            {/* UPI QR Code Details Card when UPI QR is selected */}
+            {paymentMethod === 'upi_qr' && (
+              <div className="bg-gradient-to-br from-amber-50/60 to-rose-50/60 p-4 rounded-2xl border border-amber-200 text-center space-y-3">
+                <p className="text-xs font-bold text-amber-900 flex items-center justify-center gap-1.5">
+                  <QrCode className="w-4 h-4 text-[#C97C5D]" /> Scan QR Code or Click below to Pay via UPI App
+                </p>
+
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-4 py-1">
+                  <div className="bg-white p-2 rounded-2xl shadow border border-rose-100">
+                    <img src="/QR.png" alt="Bank UPI QR Code" className="w-36 h-36 object-contain rounded-xl" />
+                  </div>
+
+                  <div className="text-left space-y-1.5 text-xs text-gray-700">
+                    <p><span className="font-semibold text-gray-500">UPI ID:</span> <span className="font-mono font-bold text-gray-900 bg-white px-2 py-1 rounded border">{UPI_ID}</span></p>
+                    <p><span className="font-semibold text-gray-500">Account Name:</span> <span className="font-bold text-gray-800">Hath Ki Kala</span></p>
+                    <p><span className="font-semibold text-gray-500">Amount to Pay:</span> <span className="font-extrabold text-[#C97C5D] text-sm">₹{cartTotal}</span></p>
+                    
+                    {/* Deep link button for smartphones to trigger installed UPI apps */}
+                    <a
+                      href={upiDeepLink}
+                      className="inline-flex items-center gap-1.5 mt-2 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow transition"
+                    >
+                      <Smartphone className="w-4 h-4" /> Pay via Mobile UPI App (GPay / PhonePe / Paytm)
+                    </a>
+                  </div>
+                </div>
+
+                <p className="text-[11px] text-gray-500 italic">
+                  Note: On mobile, clicking the button launches your installed UPI apps directly. After payment, click "Proceed to Payment Verification" to attach your screenshot.
+                </p>
+              </div>
+            )}
 
             {/* Submit */}
             <button
@@ -280,35 +407,119 @@ export default function CheckoutModal() {
               disabled={loading}
               className="w-full py-4 bg-[#C97C5D] hover:bg-[#b0674a] text-white font-extrabold rounded-2xl shadow-lg transition flex items-center justify-center gap-2 text-base disabled:opacity-50"
             >
-              {loading ? 'Processing Order...' : `Confirm & Place Order (₹${cartTotal})`} <ArrowRight className="w-5 h-5" />
+              {paymentMethod === 'upi_qr' ? (
+                <>Proceed to Payment Verification (₹{cartTotal}) <ArrowRight className="w-5 h-5" /></>
+              ) : (
+                <>{loading ? 'Processing Order...' : `Confirm & Place Order (₹${cartTotal})`} <ArrowRight className="w-5 h-5" /></>
+              )}
             </button>
           </form>
-        ) : (
-          /* Confirmation Screen */
+        )}
+
+        {/* Step 2: UPI Payment Screenshot Upload & Verification */}
+        {step === 'upi_verification' && (
+          <form onSubmit={handleConfirmUpiPayment} className="p-6 space-y-6 animate-fadeIn">
+            <div className="bg-amber-50 p-4 rounded-2xl border border-amber-200 space-y-2 text-center">
+              <AlertCircle className="w-8 h-8 text-amber-600 mx-auto" />
+              <h4 className="font-extrabold text-gray-800 text-base">Have you completed the payment?</h4>
+              <p className="text-xs text-gray-600">
+                Please confirm that you have sent <span className="font-extrabold text-[#C97C5D]">₹{cartTotal}</span> to UPI ID <span className="font-mono font-bold text-gray-800">{UPI_ID}</span>.
+              </p>
+            </div>
+
+            {/* Upload Section */}
+            <div className="space-y-3">
+              <label className="block text-xs font-bold text-gray-700">
+                Upload Payment Screenshot / Proof <span className="text-rose-500">*</span>
+              </label>
+
+              <div className="border-2 border-dashed border-rose-200 hover:border-[#C97C5D] rounded-2xl p-4 text-center cursor-pointer bg-rose-50/30 transition">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  required
+                  className="hidden"
+                  id="screenshot-upload"
+                />
+                <label htmlFor="screenshot-upload" className="cursor-pointer block space-y-2">
+                  {paymentScreenshotPreview ? (
+                    <div className="space-y-2">
+                      <img
+                        src={paymentScreenshotPreview}
+                        alt="Payment Screenshot Preview"
+                        className="max-h-48 mx-auto rounded-xl border shadow-sm object-contain"
+                      />
+                      <p className="text-xs text-emerald-600 font-bold">✓ Screenshot attached. Click to change image.</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2 py-3">
+                      <Upload className="w-10 h-10 text-[#C97C5D] mx-auto" />
+                      <p className="text-sm font-bold text-gray-700">Click to select screenshot from your phone / device</p>
+                      <p className="text-xs text-gray-400">Supports PNG, JPG, JPEG screenshots</p>
+                    </div>
+                  )}
+                </label>
+              </div>
+            </div>
+
+            <div className="bg-blue-50 p-3 rounded-xl border border-blue-100 text-xs text-blue-800">
+              ℹ️ After customer adds that screenshot, the team will confirm the order and will give an update to you.
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => setStep('address')}
+                className="w-1/3 py-3.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-2xl text-sm transition"
+              >
+                Back
+              </button>
+              <button
+                type="submit"
+                disabled={uploadingProof || loading || !paymentScreenshotFile}
+                className="w-2/3 py-3.5 bg-[#C97C5D] hover:bg-[#b0674a] text-white font-extrabold rounded-2xl shadow-lg transition flex items-center justify-center gap-2 text-sm disabled:opacity-50"
+              >
+                {(uploadingProof || loading) ? (
+                  <><Loader2 className="w-4 h-4 animate-spin" /> Submitting Proof...</>
+                ) : (
+                  <>Submit Proof & Confirm Order <CheckCircle2 className="w-5 h-5" /></>
+                )}
+              </button>
+            </div>
+          </form>
+        )}
+
+        {/* Step 3: Order Confirmation Screen */}
+        {step === 'confirmation' && (
           <div className="p-8 text-center space-y-6">
             <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-600 mx-auto text-4xl shadow-inner">
               <CheckCircle2 className="w-12 h-12" />
             </div>
 
             <div className="space-y-2">
-              <h3 className="text-2xl font-extrabold text-gray-800">Thank You for Your Order! 🎉</h3>
-              <p className="text-sm text-gray-500">Your handmade creation is being prepared with care and love.</p>
+              <h3 className="text-2xl font-extrabold text-gray-800">Order Placed Successfully! 🎉</h3>
+              <p className="text-sm text-gray-600 font-medium">
+                The team will confirm the order and will give an update to you in your account Order section.
+              </p>
               <div className="inline-block px-4 py-1.5 bg-rose-50 rounded-full border border-rose-100 text-[#C97C5D] font-mono font-bold text-sm">
                 Order ID: #{createdOrder?.id?.substring(18)}
               </div>
             </div>
 
-            <div className="bg-gray-50 p-4 rounded-2xl text-left text-xs text-gray-600 space-y-1">
+            <div className="bg-gray-50 p-4 rounded-2xl text-left text-xs text-gray-600 space-y-1 border">
               <p className="font-bold text-gray-800 text-sm">Deliver To:</p>
               <p>{createdOrder?.shippingAddress?.fullName}</p>
               <p>{createdOrder?.shippingAddress?.line1}, {createdOrder?.shippingAddress?.city}</p>
-              <p className="text-emerald-700 font-bold pt-1">Estimated Delivery: 3 - 5 Business Days</p>
+              <p className="text-emerald-700 font-bold pt-1">Status: Pending Admin Confirmation</p>
             </div>
 
             <button
               onClick={() => {
                 setCheckoutOpen(false);
                 setStep('address');
+                setPaymentScreenshotFile(null);
+                setPaymentScreenshotPreview('');
               }}
               className="w-full py-3.5 bg-[#C97C5D] text-white font-bold rounded-2xl shadow hover:bg-[#b0674a]"
             >

@@ -153,6 +153,7 @@ export async function createOrder(req: Request, res: Response) {
         status: 'pending' as const,
         amount: totalAmount,
         currency: 'INR',
+        ...((req.body as any).paymentProof ? { paymentProof: (req.body as any).paymentProof } : {}),
       },
       subtotal,
       shippingFee,

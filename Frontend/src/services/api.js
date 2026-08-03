@@ -41,6 +41,7 @@ export const api = {
   // Auth
   login: (credentials) => request('/auth/login', { method: 'POST', body: JSON.stringify(credentials) }),
   signup: (userData) => request('/auth/register', { method: 'POST', body: JSON.stringify(userData) }),
+  googleLogin: (idToken) => request('/auth/google', { method: 'POST', body: JSON.stringify({ idToken }) }),
   verifyOtp: (email, otp) => request('/auth/verify-otp', { method: 'POST', body: JSON.stringify({ email, otp }) }),
   resendOtp: (email) => request('/auth/resend-otp', { method: 'POST', body: JSON.stringify({ email }) }),
   logout: () => request('/auth/logout', { method: 'POST' }),
@@ -135,6 +136,11 @@ export const api = {
   getSupportTickets: () => request('/admin/support'),
   updateSupportTicket: (id, data) => request(`/admin/support/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
   // Cloudinary & Image Upload APIs
+  uploadPaymentProof: (formData) =>
+    request('/upload/proof', {
+      method: 'POST',
+      body: formData,
+    }),
   uploadProductImages: (productId, formData) =>
     request(`/products/${productId}/images`, {
       method: 'POST',

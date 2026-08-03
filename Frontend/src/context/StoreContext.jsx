@@ -128,6 +128,21 @@ export function StoreProvider({ children }) {
     return res;
   };
 
+  const googleLogin = async (idToken) => {
+    const res = await api.googleLogin(idToken);
+    if (res.success && res.data?.user) {
+      setUser(res.data.user);
+      showNotification(`Logged in with Google as ${res.data.user.name || res.data.user.email}! 🌸`);
+      setLoginOpen(false);
+
+      const acc = await api.getAccount().catch(() => null);
+      if (acc?.data?.cart?.items) {
+        setCart(acc.data.cart.items);
+      }
+      return res.data.user;
+    }
+  };
+
   const logout = async () => {
     await api.logout().catch(() => {});
     setUser(null);
@@ -290,7 +305,7 @@ export function StoreProvider({ children }) {
         userOrders, setUserOrders, fetchMyOrders,
 
         showNotification,
-        login, signup, verifyOtp, logout,
+        login, signup, googleLogin, verifyOtp, logout,
         addToCart, updateCartQty, removeFromCart,
         toggleWishlist, isWishlisted,
         fetchProducts,

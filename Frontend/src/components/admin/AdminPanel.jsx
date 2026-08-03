@@ -12,7 +12,7 @@ import {
 
 export default function AdminPanel() {
   const { adminOpen, setAdminOpen, showNotification, categories, fetchProducts } = useStore();
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const [activeTab, setActiveTab] = useState('orders');
 
   // Stats & Data state
   const [stats, setStats] = useState(null);
@@ -210,6 +210,58 @@ export default function AdminPanel() {
     }
   };
 
+  const generateVariantsFromOptions = (basePrice, baseStock, name, colorsStr, sizesStr, setsStr) => {
+    const colors = colorsStr ? colorsStr.split(',').map(s => s.trim()).filter(Boolean) : [];
+    const sizes = sizesStr ? sizesStr.split(',').map(s => s.trim()).filter(Boolean) : [];
+    const sets = setsStr ? setsStr.split(',').map(s => s.trim()).filter(Boolean) : [];
+
+    const prefix = (name || 'PROD').substring(0, 4).toUpperCase();
+    const timestamp = Date.now();
+
+    if (colors.length === 0 && sizes.length === 0 && sets.length === 0) {
+      return [
+        {
+          sku: `${prefix}-${timestamp}`,
+          price: Number(basePrice),
+          stockQty: Number(baseStock),
+          attributes: { type: 'Standard' },
+        }
+      ];
+    }
+
+    const variants = [];
+    let index = 1;
+    const colorList = colors.length > 0 ? colors : [null];
+    const sizeList = sizes.length > 0 ? sizes : [null];
+    const setList = sets.length > 0 ? sets : [null];
+
+    for (const c of colorList) {
+      for (const s of sizeList) {
+        for (const st of setList) {
+          const attrs = {};
+          if (c) attrs.color = c;
+          if (s) attrs.size = s;
+          if (st) attrs.set = st;
+
+          const skuParts = [prefix];
+          if (c) skuParts.push(c.substring(0, 3).toUpperCase());
+          if (s) skuParts.push(s.toUpperCase());
+          if (st) skuParts.push(st.replace(/\s+/g, '').toUpperCase());
+          skuParts.push(index++);
+
+          variants.push({
+            sku: skuParts.join('-'),
+            price: Number(basePrice),
+            stockQty: Number(baseStock),
+            attributes: attrs,
+          });
+        }
+      }
+    }
+
+    return variants;
+  };
+
   const handleSaveProduct = async (e) => {
     e.preventDefault();
     try {
@@ -223,6 +275,15 @@ export default function AdminPanel() {
         });
       }
 
+      const generatedVariants = generateVariantsFromOptions(
+        productForm.basePrice,
+        productForm.stockQty,
+        productForm.name,
+        productForm.colorOptions,
+        productForm.sizeOptions,
+        productForm.setOptions
+      );
+
       await api.createProduct({
         name: productForm.name,
         categoryId: productForm.categoryId || categories[0]?.id,
@@ -231,20 +292,14 @@ export default function AdminPanel() {
         isCustomizable: productForm.isCustomizable,
         productionTimeDays: Number(productForm.productionTimeDays),
         images: finalImages,
-        variants: [
-          {
-            sku: productForm.sku || `${productForm.name.substring(0, 4).toUpperCase()}-${Date.now()}`,
-            price: Number(productForm.basePrice),
-            stockQty: Number(productForm.stockQty),
-            attributes: { type: 'Standard' },
-          },
-        ],
+        variants: generatedVariants,
       });
-      showNotification('Product created successfully with Cloudinary images! ☁️✨');
+      showNotification('Product created with color/size/set options! ☁️✨');
       setShowAddProduct(false);
       setProductForm({
         name: '', categoryId: '', basePrice: '', discountPrice: '', description: '',
-        badge: 'Handmade', emoji: '🌸', isCustomizable: false, productionTimeDays: '3', stockQty: '10', sku: '', imageUrl: '', images: [],
+        badge: 'Handmade', emoji: '🌸', isCustomizable: false, productionTimeDays: '3', stockQty: '10', sku: '',
+        colorOptions: '', sizeOptions: '', setOptions: '', imageUrl: '', images: [],
       });
       loadAdminData();
       fetchProducts();
@@ -341,11 +396,24 @@ export default function AdminPanel() {
     e.preventDefault();
     if (!editingProduct) return;
     try {
+      let updatedVariants = undefined;
+      if (editingProduct.colorOptions !== undefined || editingProduct.sizeOptions !== undefined || editingProduct.setOptions !== undefined) {
+        updatedVariants = generateVariantsFromOptions(
+          editingProduct.basePrice,
+          editingProduct.stockQty,
+          editingProduct.name,
+          editingProduct.colorOptions !== undefined ? editingProduct.colorOptions : (editingProduct.variants?.map(v => v.attributes?.color || v.attributes?.get?.('color')).filter(Boolean).join(',') || ''),
+          editingProduct.sizeOptions !== undefined ? editingProduct.sizeOptions : (editingProduct.variants?.map(v => v.attributes?.size || v.attributes?.get?.('size')).filter(Boolean).join(',') || ''),
+          editingProduct.setOptions !== undefined ? editingProduct.setOptions : (editingProduct.variants?.map(v => v.attributes?.set || v.attributes?.get?.('set')).filter(Boolean).join(',') || '')
+        );
+      }
+
       await api.updateProduct(editingProduct.id, {
         name: editingProduct.name,
         categoryId: editingProduct.categoryId,
         basePrice: Number(editingProduct.basePrice),
         description: editingProduct.description,
+        ...(updatedVariants ? { variants: updatedVariants } : {}),
         images: (editingProduct.images || []).map((img, i) => ({
           url: img.url,
           publicId: img.publicId || `img-${Date.now()}-${i}`,
@@ -354,14 +422,14 @@ export default function AdminPanel() {
         })),
       });
 
-      if (editingProduct.variants?.[0]?.id) {
+      if (!updatedVariants && editingProduct.variants?.[0]?.id) {
         await api.updateVariant(editingProduct.id, editingProduct.variants[0].id, {
           price: Number(editingProduct.discountPrice || editingProduct.basePrice),
           stockQty: Number(editingProduct.stockQty),
         });
       }
 
-      showNotification('Product updated in database!');
+      showNotification('Product updated successfully!');
       setEditingProduct(null);
       loadAdminData();
       fetchProducts();
@@ -1105,7 +1173,42 @@ export default function AdminPanel() {
                             </p>
                           </div>
 
-                          <div className="flex items-center gap-2">
+                          <div className="flex flex-wrap items-center gap-2">
+                            {/* Quick Accept / Cancel Buttons */}
+                            {ord.status !== 'confirmed' && ord.status !== 'delivered' && ord.status !== 'cancelled' && (
+                              <button
+                                onClick={() => handleUpdateOrderStatus(ord.id, 'confirmed')}
+                                className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold rounded-xl text-xs transition flex items-center gap-1.5 shadow-sm"
+                                title="Accept & Confirm Order"
+                              >
+                                <CheckCircle className="w-3.5 h-3.5" /> Accept Order
+                              </button>
+                            )}
+
+                            {ord.status !== 'cancelled' && ord.status !== 'delivered' && (
+                              <button
+                                onClick={() => {
+                                  if (confirm(`Are you sure you want to cancel order #${ord.id}?`)) {
+                                    handleUpdateOrderStatus(ord.id, 'cancelled');
+                                  }
+                                }}
+                                className="px-3 py-1.5 bg-rose-100 hover:bg-rose-200 text-rose-700 font-bold rounded-xl text-xs transition flex items-center gap-1"
+                                title="Cancel Order"
+                              >
+                                <X className="w-3.5 h-3.5" /> Cancel
+                              </button>
+                            )}
+
+                            {ord.payment?.paymentProof && (
+                              <button
+                                onClick={() => window.open(resolveImageUrl(ord.payment.paymentProof), '_blank')}
+                                className="px-3 py-1.5 bg-purple-100 hover:bg-purple-200 text-purple-800 font-bold rounded-xl text-xs transition flex items-center gap-1"
+                                title="View Payment Screenshot Proof"
+                              >
+                                📷 Payment Proof
+                              </button>
+                            )}
+
                             <button
                               onClick={() => {
                                 setSelectedOrder(ord);
@@ -1573,6 +1676,44 @@ export default function AdminPanel() {
                 className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium"
               />
 
+              {/* Product Variant Options (Colors, Sizes, Sets) */}
+              <div className="bg-rose-50/50 p-3 rounded-2xl border border-rose-100 space-y-2">
+                <label className="block text-xs font-bold text-gray-800">Variant Options (Comma-separated)</label>
+                
+                <div>
+                  <label className="block text-[11px] font-semibold text-gray-600 mb-0.5">Colors (e.g. Red, Blue, Pink, Gold):</label>
+                  <input
+                    type="text"
+                    placeholder="Red, Blue, Emerald Green"
+                    value={productForm.colorOptions || ''}
+                    onChange={(e) => setProductForm({ ...productForm, colorOptions: e.target.value })}
+                    className="w-full px-3 py-1.5 bg-white border border-gray-200 rounded-xl text-xs font-medium"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-semibold text-gray-600 mb-0.5">Sizes (e.g. S, M, L, XL, Free Size):</label>
+                  <input
+                    type="text"
+                    placeholder="S, M, L, Free Size"
+                    value={productForm.sizeOptions || ''}
+                    onChange={(e) => setProductForm({ ...productForm, sizeOptions: e.target.value })}
+                    className="w-full px-3 py-1.5 bg-white border border-gray-200 rounded-xl text-xs font-medium"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-semibold text-gray-600 mb-0.5">Sets / Bundles (e.g. Single Piece, Set of 2, Set of 4):</label>
+                  <input
+                    type="text"
+                    placeholder="Single Piece, Set of 2, Set of 4, Set of 6"
+                    value={productForm.setOptions || ''}
+                    onChange={(e) => setProductForm({ ...productForm, setOptions: e.target.value })}
+                    className="w-full px-3 py-1.5 bg-white border border-gray-200 rounded-xl text-xs font-medium"
+                  />
+                </div>
+              </div>
+
               {/* Cloudinary Image Upload Section */}
               <div>
                 <label className="block text-xs font-bold text-gray-700 mb-1">Product Images (Cloudinary)</label>
@@ -1704,6 +1845,50 @@ export default function AdminPanel() {
                   rows={3}
                   className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium"
                 />
+              </div>
+
+              {/* Product Options in Edit Product */}
+              <div className="bg-rose-50/50 p-3 rounded-2xl border border-rose-100 space-y-2">
+                <label className="block text-xs font-bold text-gray-800">Product Options (Colors, Sizes, Sets)</label>
+                
+                <div>
+                  <label className="block text-[11px] font-semibold text-gray-600 mb-0.5">Colors (e.g. Red, Blue, Pink):</label>
+                  <input
+                    type="text"
+                    placeholder="Red, Blue, Pink"
+                    value={editingProduct.colorOptions !== undefined ? editingProduct.colorOptions : (
+                      editingProduct.variants?.map(v => v.attributes?.color || v.attributes?.get?.('color')).filter(Boolean).filter((v, i, a) => a.indexOf(v) === i).join(', ') || ''
+                    )}
+                    onChange={(e) => setEditingProduct({ ...editingProduct, colorOptions: e.target.value })}
+                    className="w-full px-3 py-1.5 bg-white border border-gray-200 rounded-xl text-xs font-medium"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-semibold text-gray-600 mb-0.5">Sizes (e.g. S, M, L, XL, Free Size):</label>
+                  <input
+                    type="text"
+                    placeholder="S, M, L, Free Size"
+                    value={editingProduct.sizeOptions !== undefined ? editingProduct.sizeOptions : (
+                      editingProduct.variants?.map(v => v.attributes?.size || v.attributes?.get?.('size')).filter(Boolean).filter((v, i, a) => a.indexOf(v) === i).join(', ') || ''
+                    )}
+                    onChange={(e) => setEditingProduct({ ...editingProduct, sizeOptions: e.target.value })}
+                    className="w-full px-3 py-1.5 bg-white border border-gray-200 rounded-xl text-xs font-medium"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-semibold text-gray-600 mb-0.5">Sets / Bundles (e.g. Single Piece, Set of 2, Set of 4):</label>
+                  <input
+                    type="text"
+                    placeholder="Single Piece, Set of 2, Set of 4"
+                    value={editingProduct.setOptions !== undefined ? editingProduct.setOptions : (
+                      editingProduct.variants?.map(v => v.attributes?.set || v.attributes?.get?.('set')).filter(Boolean).filter((v, i, a) => a.indexOf(v) === i).join(', ') || ''
+                    )}
+                    onChange={(e) => setEditingProduct({ ...editingProduct, setOptions: e.target.value })}
+                    className="w-full px-3 py-1.5 bg-white border border-gray-200 rounded-xl text-xs font-medium"
+                  />
+                </div>
               </div>
 
               {/* Cloudinary Images Manager */}

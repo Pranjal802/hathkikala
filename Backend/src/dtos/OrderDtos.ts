@@ -18,7 +18,8 @@ export const createOrderSchema = z
   .object({
     addressId: objectIdSchema.optional(),
     shippingAddress: inlineAddressSchema.optional(),
-    paymentMethod: z.enum(['cod', 'online', 'cashfree', 'razorpay', 'stripe', 'paypal']).optional(),
+    paymentMethod: z.enum(['cod', 'online', 'cashfree', 'upi_qr', 'razorpay', 'stripe', 'paypal']).optional(),
+    paymentProof: z.string().optional(),
   })
   .refine((data) => data.addressId || data.shippingAddress, {
     message: 'Provide either addressId or shippingAddress',

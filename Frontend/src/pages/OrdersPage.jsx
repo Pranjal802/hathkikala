@@ -75,12 +75,14 @@ export default function OrdersPage() {
                   </div>
 
                   <span className={`px-3.5 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider ${
+                    order.status === 'confirmed' ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' :
                     order.status === 'delivered' ? 'bg-emerald-100 text-emerald-800' :
                     order.status === 'shipped' ? 'bg-blue-100 text-blue-800' :
                     order.status === 'in_production' ? 'bg-purple-100 text-purple-800' :
+                    order.status === 'cancelled' || order.status === 'refunded' ? 'bg-rose-100 text-rose-800' :
                     'bg-amber-100 text-amber-800'
                   }`}>
-                    Status: {order.status.replace('_', ' ')}
+                    Status: {order.status === 'confirmed' ? 'Confirmed ✓' : order.status.replace('_', ' ')}
                   </span>
                 </div>
 

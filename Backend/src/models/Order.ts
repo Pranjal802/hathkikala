@@ -24,9 +24,10 @@ const OrderItemSchema = new Schema<IOrderItem>({
 // Embedded: 1-to-1 with the order, always read together, no reason
 // to query payments independently of their order in this app.
 export interface IPayment {
-  provider: 'cod' | 'online' | 'cashfree' | 'razorpay' | 'stripe' | 'paypal';
+  provider: 'cod' | 'online' | 'cashfree' | 'upi_qr' | 'razorpay' | 'stripe' | 'paypal';
   providerOrderId?: string; // e.g. Cashfree / Razorpay order_id / Stripe payment_intent id
   providerPaymentId?: string; // set once payment succeeds
+  paymentProof?: string; // screenshot URL uploaded by user for UPI Bank QR payment
   status: 'pending' | 'paid' | 'failed' | 'refunded';
   amount: number;
   currency: string;
@@ -34,9 +35,10 @@ export interface IPayment {
 }
 
 const PaymentSchema = new Schema<IPayment>({
-  provider: { type: String, enum: ['cod', 'online', 'cashfree', 'razorpay', 'stripe', 'paypal'], required: true },
+  provider: { type: String, enum: ['cod', 'online', 'cashfree', 'upi_qr', 'razorpay', 'stripe', 'paypal'], required: true },
   providerOrderId: { type: String },
   providerPaymentId: { type: String },
+  paymentProof: { type: String },
   status: { type: String, enum: ['pending', 'paid', 'failed', 'refunded'], default: 'pending' },
   amount: { type: Number, required: true },
   currency: { type: String, default: 'INR' },
