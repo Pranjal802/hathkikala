@@ -20,16 +20,19 @@ export async function generateVirtualTryOn(req: Request, res: Response) {
   const inputUserImage = userImageUrl || req.body.demoModelUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80';
   const productImage = product.images?.[0]?.url || (product as any).thumbnail || 'https://images.unsplash.com/photo-1611591475858-a53697a8101a?w=500&auto=format&fit=crop&q=80';
 
-  // AI Generation & Synthesis Algorithm
-  // If OpenAI / Gemini Vision key is present in process.env, call model API.
-  // Otherwise, produce high-fidelity AI composite image URL.
   let generatedImageUrl = '';
 
   try {
-    // Generate AI Vision blended result
-    // Construct realistic AI result URL using high quality Cloudinary/Unsplash AI compositing URL template
     const timestamp = Date.now();
-    generatedImageUrl = `https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=800&auto=format&fit=crop&q=80&tryon_prod=${encodeURIComponent(product.name)}&ts=${timestamp}`;
+    const seed = Math.floor(Math.random() * 900000) + 100000;
+    
+    // Construct rich prompt for Pollinations AI (Free FLUX.1 Model Engine)
+    const promptText = `A professional luxury fashion portrait of an Indian person ${
+      posePreference === 'holding' ? 'holding and carrying' : 'wearing'
+    } an authentic handcrafted Indian ${product.name}, ${product.description || 'handmade craftsmanship'}, luxury aesthetic, studio lighting, photorealistic, 8k resolution`;
+
+    // Free AI Generation URL via Pollinations AI API
+    generatedImageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(promptText)}?width=800&height=800&seed=${seed}&nologo=true&model=flux`;
     
     // Log AI try-on event
     await AiTryOnLog.create({

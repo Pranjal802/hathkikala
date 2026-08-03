@@ -31,6 +31,8 @@ export default function VirtualTryOnModal({ product, isOpen, onClose }) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [progressStep, setProgressStep] = useState(0);
   const [generatedResult, setGeneratedResult] = useState(null);
+  const [activeResultTab, setActiveResultTab] = useState('composite'); // 'composite' | 'ai_render'
+  const [compositePhotoUrl, setCompositePhotoUrl] = useState('');
 
   if (!isOpen || !product) return null;
 
@@ -42,10 +44,94 @@ export default function VirtualTryOnModal({ product, isOpen, onClose }) {
         return;
       }
       setUploadedFile(file);
-      const objUrl = URL.createObjectURL(file);
-      setUploadedPreview(objUrl);
-      setSelectedPhotoUrl(objUrl);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const dataUrl = reader.result;
+        setUploadedPreview(dataUrl);
+        setSelectedPhotoUrl(dataUrl);
+      };
+      reader.readAsDataURL(file);
     }
+  };
+
+  const [posX, setPosX] = useState(50); // percentage 0-100
+  const [posY, setPosY] = useState(55); // percentage 0-100
+  const [itemScale, setItemScale] = useState(35); // percentage 10-100
+  const [rotation, setRotation] = useState(0); // degrees -45 to 45
+
+  const createCompositeImage = (
+    userImgUrl,
+    prodImgUrl,
+    prodName,
+    customX = posX,
+    customY = posY,
+    customScale = itemScale,
+    customRot = rotation
+  ) => {
+    return new Promise((resolve) => {
+      const canvas = document.createElement('canvas');
+      canvas.width = 800;
+      canvas.height = 800;
+      const ctx = canvas.getContext('2d');
+
+      const userImg = new Image();
+      userImg.crossOrigin = 'anonymous';
+      userImg.onload = () => {
+        // Draw user photo filling 800x800 square
+        ctx.drawImage(userImg, 0, 0, 800, 800);
+
+        const prodImg = new Image();
+        prodImg.crossOrigin = 'anonymous';
+        prodImg.onload = () => {
+          ctx.save();
+
+          // Calculate center coordinates
+          const centerX = (customX / 100) * 800;
+          const centerY = (customY / 100) * 800;
+          const size = (customScale / 100) * 800;
+
+          // Translate & Rotate around center
+          ctx.translate(centerX, centerY);
+          ctx.rotate((customRot * Math.PI) / 180);
+
+          // Realistic Ambient Drop Shadow
+          ctx.shadowColor = 'rgba(0, 0, 0, 0.45)';
+          ctx.shadowBlur = 24;
+          ctx.shadowOffsetX = 6;
+          ctx.shadowOffsetY = 10;
+
+          // Draw product image directly on person's photo
+          ctx.drawImage(prodImg, -size / 2, -size / 2, size, size);
+
+          ctx.restore();
+
+          // Bottom subtle gradient for badge
+          ctx.save();
+          const grad = ctx.createLinearGradient(0, 680, 0, 800);
+          grad.addColorStop(0, 'transparent');
+          grad.addColorStop(1, 'rgba(0,0,0,0.65)');
+          ctx.fillStyle = grad;
+          ctx.fillRect(0, 680, 800, 120);
+
+          // Badge
+          ctx.fillStyle = '#C97C5D';
+          ctx.beginPath();
+          ctx.roundRect(24, 725, 430, 50, 25);
+          ctx.fill();
+
+          ctx.fillStyle = '#FFFFFF';
+          ctx.font = 'bold 17px sans-serif';
+          ctx.fillText(`✨ Virtual Try-On: ${prodName}`, 42, 757);
+
+          ctx.restore();
+          resolve(canvas.toDataURL('image/jpeg', 0.92));
+        };
+        prodImg.onerror = () => resolve(userImgUrl);
+        prodImg.src = prodImgUrl;
+      };
+      userImg.onerror = () => resolve(prodImgUrl);
+      userImg.src = userImgUrl;
+    });
   };
 
   const handleGenerateTryOn = async () => {
@@ -53,20 +139,12 @@ export default function VirtualTryOnModal({ product, isOpen, onClose }) {
     setProgressStep(1);
 
     try {
-      let finalUserPhotoUrl = selectedPhotoUrl;
+      const finalUserPhotoUrl = selectedPhotoUrl;
+      const targetProdUrl = resolveImageUrl(product.thumbnail || product.images?.[0]?.url);
 
-      // Upload custom photo to Cloudinary if file attached
-      if (uploadedFile) {
-        setProgressStep(1); // "Uploading customer photo..."
-        const formData = new FormData();
-        formData.append('image', uploadedFile);
-        formData.append('folder', 'handmade/ai_tryon_user');
-
-        const uploadRes = await api.uploadImage(formData).catch(() => null);
-        if (uploadRes?.data?.url || uploadRes?.data?.secure_url) {
-          finalUserPhotoUrl = uploadRes.data.url || uploadRes.data.secure_url;
-        }
-      }
+      // Generate instant canvas composite with user photo
+      const compositeUrl = await createCompositeImage(finalUserPhotoUrl, targetProdUrl, product.name);
+      setCompositePhotoUrl(compositeUrl);
 
       // Step 2 Progress
       setTimeout(() => setProgressStep(2), 1200); // "Mapping handcrafted item & patterns..."
@@ -97,9 +175,10 @@ export default function VirtualTryOnModal({ product, isOpen, onClose }) {
   };
 
   const handleDownloadResult = () => {
-    if (!generatedResult?.generatedImageUrl) return;
+    const targetUrl = activeResultTab === 'composite' ? compositePhotoUrl : generatedResult?.generatedImageUrl;
+    if (!targetUrl) return;
     const link = document.createElement('a');
-    link.href = generatedResult.generatedImageUrl;
+    link.href = targetUrl;
     link.download = `HathKiKala_TryOn_${product.name.replace(/\s+/g, '_')}.jpg`;
     document.body.appendChild(link);
     link.click();
@@ -272,7 +351,7 @@ export default function VirtualTryOnModal({ product, isOpen, onClose }) {
             </div>
           ) : (
             /* Result Screen */
-            <div className="space-y-6 animate-fadeIn">
+            <div className="space-y-5 animate-fadeIn">
               
               <div className="bg-emerald-50 p-3 rounded-2xl border border-emerald-200 text-center">
                 <span className="text-xs font-bold text-emerald-800 flex items-center justify-center gap-1.5">
@@ -280,18 +359,147 @@ export default function VirtualTryOnModal({ product, isOpen, onClose }) {
                 </span>
               </div>
 
+              {/* View Switcher Tabs */}
+              <div className="flex bg-rose-50/80 p-1.5 rounded-2xl border border-rose-100 gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => setActiveResultTab('composite')}
+                  className={`flex-1 py-2 text-xs font-bold rounded-xl transition ${
+                    activeResultTab === 'composite'
+                      ? 'bg-[#C97C5D] text-white shadow-sm'
+                      : 'text-gray-700 hover:bg-rose-100'
+                  }`}
+                >
+                  📸 Your Photo + Item Overlay
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveResultTab('ai_render')}
+                  className={`flex-1 py-2 text-xs font-bold rounded-xl transition ${
+                    activeResultTab === 'ai_render'
+                      ? 'bg-[#C97C5D] text-white shadow-sm'
+                      : 'text-gray-700 hover:bg-rose-100'
+                  }`}
+                >
+                  ✨ FLUX.1 AI Fashion Render
+                </button>
+              </div>
+
               {/* Generated Image Result Display */}
               <div className="relative aspect-4/3 rounded-3xl overflow-hidden border-2 border-rose-100 shadow-lg bg-rose-50/50">
                 <img
-                  src={generatedResult.generatedImageUrl}
+                  src={activeResultTab === 'composite' ? compositePhotoUrl : generatedResult.generatedImageUrl}
                   alt="AI Try-On Result"
                   className="w-full h-full object-cover"
                 />
 
                 <div className="absolute top-3 left-3 bg-black/60 backdrop-blur-md text-white px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-1">
-                  <Sparkles size={12} className="text-amber-300" /> AI Preview Output
+                  <Sparkles size={12} className="text-amber-300" />
+                  {activeResultTab === 'composite' ? 'Visual Overlay Composite' : 'FLUX.1 AI Render'}
                 </div>
               </div>
+
+              {/* Live Fitting Adjustment Sliders (When Composite View is active) */}
+              {activeResultTab === 'composite' && (
+                <div className="bg-rose-50/70 p-4 rounded-2xl border border-rose-100 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-gray-800 uppercase tracking-wider flex items-center gap-1">
+                      🛠️ Live Fitting Position & Scale Controls
+                    </span>
+                    <span className="text-[10px] text-gray-500 font-medium">Position product onto your body/wrist</span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3 text-xs">
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-600 mb-1">↔️ Left / Right Position</label>
+                      <input
+                        type="range"
+                        min={10}
+                        max={90}
+                        value={posX}
+                        onChange={async (e) => {
+                          const val = Number(e.target.value);
+                          setPosX(val);
+                          const url = await createCompositeImage(
+                            selectedPhotoUrl,
+                            resolveImageUrl(product.thumbnail || product.images?.[0]?.url),
+                            product.name,
+                            val, posY, itemScale, rotation
+                          );
+                          setCompositePhotoUrl(url);
+                        }}
+                        className="w-full accent-[#C97C5D]"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-600 mb-1">↕️ Up / Down Position</label>
+                      <input
+                        type="range"
+                        min={10}
+                        max={90}
+                        value={posY}
+                        onChange={async (e) => {
+                          const val = Number(e.target.value);
+                          setPosY(val);
+                          const url = await createCompositeImage(
+                            selectedPhotoUrl,
+                            resolveImageUrl(product.thumbnail || product.images?.[0]?.url),
+                            product.name,
+                            posX, val, itemScale, rotation
+                          );
+                          setCompositePhotoUrl(url);
+                        }}
+                        className="w-full accent-[#C97C5D]"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-600 mb-1">🔍 Item Size / Scale</label>
+                      <input
+                        type="range"
+                        min={15}
+                        max={75}
+                        value={itemScale}
+                        onChange={async (e) => {
+                          const val = Number(e.target.value);
+                          setItemScale(val);
+                          const url = await createCompositeImage(
+                            selectedPhotoUrl,
+                            resolveImageUrl(product.thumbnail || product.images?.[0]?.url),
+                            product.name,
+                            posX, posY, val, rotation
+                          );
+                          setCompositePhotoUrl(url);
+                        }}
+                        className="w-full accent-[#C97C5D]"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-600 mb-1">🔄 Rotation Angle</label>
+                      <input
+                        type="range"
+                        min={-45}
+                        max={45}
+                        value={rotation}
+                        onChange={async (e) => {
+                          const val = Number(e.target.value);
+                          setRotation(val);
+                          const url = await createCompositeImage(
+                            selectedPhotoUrl,
+                            resolveImageUrl(product.thumbnail || product.images?.[0]?.url),
+                            product.name,
+                            posX, posY, itemScale, val
+                          );
+                          setCompositePhotoUrl(url);
+                        }}
+                        className="w-full accent-[#C97C5D]"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Action Buttons */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
