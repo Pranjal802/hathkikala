@@ -1409,6 +1409,18 @@ export default function AdminPanel() {
                               </button>
                             )}
 
+                            {(ord.shippingAddress?.phone || ord.customerPhone) && (
+                              <a
+                                href={`https://wa.me/91${(ord.shippingAddress?.phone || ord.customerPhone).replace(/[^\d]/g, '')}?text=${encodeURIComponent(`Hello ${ord.shippingAddress?.fullName || 'Customer'}, regarding your Hath Ki Kala order #${ord.id}:`)}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs transition flex items-center gap-1 shadow-sm"
+                                title="Chat with Customer on WhatsApp"
+                              >
+                                WhatsApp Customer 💬
+                              </a>
+                            )}
+
                             {ord.status !== 'cancelled' && ord.status !== 'delivered' && (
                               <button
                                 onClick={() => {
@@ -1830,7 +1842,18 @@ export default function AdminPanel() {
                         </div>
                       )}
 
-                      <div className="flex justify-end pt-1">
+                      <div className="flex justify-end gap-2 pt-1">
+                        {tkt.phone && (
+                          <a
+                            href={`https://wa.me/91${tkt.phone.replace(/[^\d]/g, '')}?text=${encodeURIComponent(`Hello ${tkt.customerName || 'Customer'}, regarding your enquiry "${tkt.subject}":`)}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition flex items-center gap-1.5 shadow-sm"
+                          >
+                            Reply on WhatsApp 💬
+                          </a>
+                        )}
+
                         <button
                           onClick={() => setNotingTicket({ id: tkt._id, subject: tkt.subject, customerName: tkt.customerName, status: tkt.status, notes: tkt.notes || '' })}
                           className="px-3 py-1.5 bg-gray-100 text-gray-700 hover:bg-gray-200 text-xs font-bold rounded-xl transition flex items-center gap-1.5"

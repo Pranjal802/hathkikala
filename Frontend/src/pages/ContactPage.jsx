@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Mail, Phone, MapPin, Send, CheckCircle2, MessageSquare, Sparkles } from 'lucide-react';
+import { Mail, Phone, MapPin, Send, CheckCircle2, MessageSquare, Sparkles, Smartphone } from 'lucide-react';
 import { api } from '../services/api.js';
 import { useStore } from '../context/StoreContext.jsx';
+import { createWhatsAppUrl, formatSupportWhatsAppMessage } from '../utils/whatsappHelper.js';
 
 export default function ContactPage() {
   const { showNotification } = useStore();
@@ -16,7 +17,7 @@ export default function ContactPage() {
   });
 
   const [submitting, setSubmitting] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
+  const [submittedTicket, setSubmittedTicket] = useState(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -24,15 +25,8 @@ export default function ContactPage() {
     try {
       const res = await api.submitSupportTicket(form);
       if (res.success) {
-        setSubmitted(true);
+        setSubmittedTicket(form);
         showNotification('Thank you! Your message has been sent to our team 🎉');
-        setForm({
-          customerName: '',
-          email: '',
-          phone: '',
-          subject: 'Custom Order Request',
-          message: '',
-        });
       }
     } catch (err) {
       showNotification(err.message || 'Failed to submit inquiry', 'error');
@@ -109,21 +103,44 @@ export default function ContactPage() {
 
           {/* Contact Form */}
           <div className="bg-white p-8 sm:p-10 rounded-4xl shadow-sm border border-rose-100 md:col-span-2">
-            {submitted ? (
-              <div className="text-center py-12 space-y-4">
-                <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto">
+            {submittedTicket ? (
+              <div className="text-center py-10 space-y-5">
+                <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto shadow-inner">
                   <CheckCircle2 size={32} />
                 </div>
-                <h3 className="font-serif text-2xl font-bold text-[#3E2C23]">Message Sent Successfully!</h3>
-                <p className="font-sans text-xs text-[#5C4033]/70 max-w-md mx-auto">
-                  Thank you for contacting Hath Ki Kala. Our artisan team will review your inquiry and get back to you shortly.
-                </p>
-                <button
-                  onClick={() => setSubmitted(false)}
-                  className="px-6 py-2.5 bg-[#C97C5D] text-white font-bold text-xs rounded-xl shadow hover:bg-[#b0674a] transition"
-                >
-                  Send Another Message
-                </button>
+                <div className="space-y-1">
+                  <h3 className="font-serif text-2xl font-bold text-[#3E2C23]">Enquiry Logged Successfully!</h3>
+                  <p className="font-sans text-xs text-[#5C4033]/70 max-w-md mx-auto">
+                    Thank you! Your message has been saved into our system. You can also chat directly with our team on WhatsApp now for faster response.
+                  </p>
+                </div>
+
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+                  <a
+                    href={createWhatsAppUrl(formatSupportWhatsAppMessage(submittedTicket))}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl shadow transition flex items-center gap-2"
+                  >
+                    <Smartphone size={16} /> Send Enquiry on WhatsApp 💬
+                  </a>
+
+                  <button
+                    onClick={() => {
+                      setSubmittedTicket(null);
+                      setForm({
+                        customerName: '',
+                        email: '',
+                        phone: '',
+                        subject: 'Custom Order Request',
+                        message: '',
+                      });
+                    }}
+                    className="px-5 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-xs rounded-xl transition"
+                  >
+                    Send Another Message
+                  </button>
+                </div>
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-4">

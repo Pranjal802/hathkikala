@@ -3,6 +3,7 @@ import { useStore } from '../context/StoreContext.jsx';
 import { api } from '../services/api.js';
 import { X, CheckCircle2, ShieldCheck, Truck, CreditCard, ArrowRight, QrCode, Upload, Smartphone, AlertCircle, Loader2 } from 'lucide-react';
 import { load } from '@cashfreepayments/cashfree-js';
+import { createWhatsAppUrl, formatOrderWhatsAppMessage } from '../utils/whatsappHelper.js';
 
 const UPI_ID = import.meta.env.VITE_UPI_ID || '9313729507@hdfc';
 
@@ -541,6 +542,17 @@ export default function CheckoutModal() {
               <p className="text-emerald-700 font-bold pt-1">Status: Pending Admin Confirmation</p>
             </div>
 
+            {createdOrder && (
+              <a
+                href={createWhatsAppUrl(formatOrderWhatsAppMessage(createdOrder))}
+                target="_blank"
+                rel="noreferrer"
+                className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold rounded-2xl shadow-lg transition flex items-center justify-center gap-2 text-sm"
+              >
+                <Smartphone className="w-5 h-5" /> Send Order Details to Store on WhatsApp 💬
+              </a>
+            )}
+
             <button
               onClick={() => {
                 setCheckoutOpen(false);
@@ -548,7 +560,7 @@ export default function CheckoutModal() {
                 setPaymentScreenshotFile(null);
                 setPaymentScreenshotPreview('');
               }}
-              className="w-full py-3.5 bg-[#C97C5D] text-white font-bold rounded-2xl shadow hover:bg-[#b0674a]"
+              className="w-full py-3 bg-gray-100 text-gray-700 font-bold rounded-2xl hover:bg-gray-200 text-xs"
             >
               Back to Store
             </button>
