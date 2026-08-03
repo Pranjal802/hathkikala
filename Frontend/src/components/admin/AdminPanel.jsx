@@ -7,7 +7,7 @@ import {
   Plus, Edit2, Trash2, CheckCircle, AlertTriangle, ArrowUpRight, Search, Eye, RefreshCw, Truck,
   Star, MessageSquare, Headset, Check, CornerDownRight, Upload, Image as ImageIcon, Loader2,
   Printer, FileText, Download, Calendar, Filter, Clock, User, MapPin, CreditCard, ShieldCheck,
-  Send, FileSpreadsheet, AlertCircle, RefreshCcw
+  Send, FileSpreadsheet, AlertCircle, RefreshCcw, Sparkles
 } from 'lucide-react';
 
 export default function AdminPanel() {
