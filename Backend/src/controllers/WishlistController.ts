@@ -10,7 +10,7 @@ export async function getWishlist(req: Request, res: Response) {
 
   let wishlist = await Wishlist.findOne({ userId }).populate({
     path: 'products.productId',
-    select: 'name slug basePrice compareAtPrice rating reviewCount images category variants isActive',
+    select: 'name slug basePrice discountPrice compareAtPrice rating reviewCount images category variants isActive',
   });
 
   if (!wishlist) {
@@ -18,7 +18,7 @@ export async function getWishlist(req: Request, res: Response) {
   }
 
   // Filter out any hard-deleted product references
-  const validProducts = wishlist.products.filter((item) => item.productId !== null);
+  const validProducts = wishlist.products.filter((item) => item.productId !== null && item.productId !== undefined);
 
   return res.status(200).json({
     success: true,
@@ -31,6 +31,7 @@ export async function getWishlist(req: Request, res: Response) {
           name: prod.name,
           slug: prod.slug,
           basePrice: prod.basePrice,
+          discountPrice: prod.discountPrice || null,
           compareAtPrice: prod.compareAtPrice,
           rating: prod.rating,
           reviewCount: prod.reviewCount,
@@ -59,7 +60,7 @@ export async function toggleWishlist(req: Request, res: Response) {
   }
 
   const existingIndex = wishlist.products.findIndex(
-    (p) => p.productId.toString() === productId.toString()
+    (p) => p && p.productId && p.productId.toString() === productId.toString()
   );
 
   let isSaved = false;
@@ -73,10 +74,14 @@ export async function toggleWishlist(req: Request, res: Response) {
 
   await wishlist.save();
 
+  const validWishlistIds = wishlist.products
+    .filter((p) => p && p.productId)
+    .map((p) => (p.productId._id ? p.productId._id.toString() : p.productId.toString()));
+
   return res.status(200).json({
     success: true,
     message: isSaved ? 'Added to Wishlist ❤️' : 'Removed from Wishlist',
-    data: { isSaved, wishlistProductIds: wishlist.products.map((p) => p.productId.toString()) },
+    data: { isSaved, wishlistProductIds: validWishlistIds },
   });
 }
 
@@ -107,17 +112,21 @@ export async function moveToCart(req: Request, res: Response) {
     cart = await Cart.create({ userId, items: [] });
   }
 
+  const effectivePrice = targetVariant.price !== undefined ? targetVariant.price : (product.discountPrice || product.basePrice || 0);
+
   const existingCartItem = cart.items.find(
-    (item) => item.productId.toString() === productId.toString() && item.variantSku === targetVariant.sku
+    (item) => item.productId && item.productId.toString() === productId.toString() && item.variantSku === targetVariant.sku
   );
 
   if (existingCartItem) {
     existingCartItem.quantity += 1;
+    existingCartItem.priceSnapshot = effectivePrice;
   } else {
     cart.items.push({
-      productId,
+      productId: product._id,
       variantSku: targetVariant.sku,
       quantity: 1,
+      priceSnapshot: effectivePrice,
     } as any);
   }
   await cart.save();
@@ -125,7 +134,7 @@ export async function moveToCart(req: Request, res: Response) {
   // Remove from Wishlist
   await Wishlist.updateOne(
     { userId },
-    { $pull: { products: { productId } } }
+    { $pull: { products: { productId: product._id } } }
   );
 
   return res.status(200).json({
