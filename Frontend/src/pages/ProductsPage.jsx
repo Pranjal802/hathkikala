@@ -380,6 +380,17 @@ export default function ProductsPage() {
                               <Eye size={16} />
                             </button>
                             <button
+                              onClick={() => toggleWishlist(prod)}
+                              className={`p-2.5 rounded-xl border transition shadow-sm flex items-center justify-center ${
+                                isWishlisted(prod.id)
+                                  ? 'bg-rose-50 border-rose-200 text-rose-500 hover:bg-rose-100'
+                                  : 'bg-[#F5E6DA] border-transparent text-gray-500 hover:text-rose-500 hover:bg-rose-50'
+                              }`}
+                              title={isWishlisted(prod.id) ? "Remove from Wishlist" : "Add to Wishlist"}
+                            >
+                              <Heart size={16} className={isWishlisted(prod.id) ? 'fill-rose-500 text-rose-500' : ''} />
+                            </button>
+                            <button
                               onClick={() => addToCart(prod)}
                               className="bg-[#3E2C23] hover:bg-[#C97C5D] text-white px-3 py-2.5 rounded-xl transition shadow-sm flex items-center justify-center gap-1.5 text-xs font-bold"
                             >
@@ -428,6 +439,17 @@ export default function ProductsPage() {
                           className="px-4 py-2.5 bg-rose-50 text-[#C97C5D] hover:bg-rose-100 font-bold text-xs rounded-xl transition flex items-center gap-1.5"
                         >
                           <Eye size={15} /> Quick View
+                        </button>
+                        <button
+                          onClick={() => toggleWishlist(prod)}
+                          className={`p-2.5 rounded-xl border transition flex items-center justify-center ${
+                            isWishlisted(prod.id)
+                              ? 'bg-rose-50 border-rose-200 text-rose-500 hover:bg-rose-100'
+                              : 'bg-gray-100 border-gray-200 text-gray-600 hover:bg-rose-50 hover:text-rose-500 hover:border-rose-200'
+                          }`}
+                          title={isWishlisted(prod.id) ? "Remove from Wishlist" : "Add to Wishlist"}
+                        >
+                          <Heart size={16} className={isWishlisted(prod.id) ? 'fill-rose-500 text-rose-500' : ''} />
                         </button>
                         <button
                           onClick={() => addToCart(prod)}

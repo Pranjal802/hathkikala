@@ -177,7 +177,7 @@ export default function ProductsSection() {
                       )}
                     </div>
 
-                    {/* Add to Cart Button */}
+                    {/* Add to Cart & Wishlist Buttons */}
                     <div className="flex gap-2">
                       <button
                         onClick={() => addToCart(product)}
@@ -185,6 +185,21 @@ export default function ProductsSection() {
                       >
                         <ShoppingCart size={17} />
                         Add to Cart
+                      </button>
+
+                      <button
+                        onClick={() => toggleWishlist(product)}
+                        className={`p-3 rounded-2xl border transition-all duration-300 flex items-center justify-center shadow-sm ${
+                          isWishlisted(product.id)
+                            ? 'bg-rose-50 border-rose-200 text-rose-500 hover:bg-rose-100'
+                            : 'bg-[#F7F2EB] border-gray-200 text-[#6B8E7F] hover:bg-rose-50 hover:text-rose-500 hover:border-rose-200'
+                        }`}
+                        title={isWishlisted(product.id) ? "Remove from Wishlist" : "Add to Wishlist"}
+                      >
+                        <Heart
+                          size={18}
+                          className={isWishlisted(product.id) ? "fill-rose-500 text-rose-500" : ""}
+                        />
                       </button>
                     </div>
                   </div>
