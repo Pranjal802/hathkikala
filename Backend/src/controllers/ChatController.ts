@@ -3,6 +3,7 @@ import ChatQuestion, { type IChatQuestion } from '../models/ChatQuestion.js';
 import UnansweredQuestion from '../models/UnansweredQuestion.js';
 import SiteSetting from '../models/SiteSetting.js';
 import { AppError } from '../utils/AppError.js';
+import { notifyOwnerChatQuestion } from '../services/whatsappService.js';
 
 const SEED_QUESTIONS = [
   // Orders & Delivery
@@ -187,6 +188,11 @@ export async function askUnansweredQuestion(req: Request, res: Response) {
     customerEmail: customerEmail || req.user?.email,
     ...(req.user?._id ? { userId: req.user._id as any } : {}),
   });
+
+  // Trigger WhatsApp notification to owner
+  notifyOwnerChatQuestion(logged).catch((err) =>
+    console.error('WhatsApp chat query notification error:', err)
+  );
 
   return res.status(201).json({
     success: true,

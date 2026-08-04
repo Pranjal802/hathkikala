@@ -4,6 +4,7 @@ import Coupon from '../models/Coupon.js';
 import User from '../models/User.js';
 import Order from '../models/Order.js';
 import { AppError } from '../utils/AppError.js';
+import { notifyOwnerSupportTicket } from '../services/whatsappService.js';
 
 // GET /api/admin/settings - Public & Admin
 export async function getSiteSettings(req: Request, res: Response) {
@@ -230,6 +231,11 @@ export async function createSupportTicket(req: Request, res: Response) {
     message,
     status: 'new',
   });
+
+  // Trigger WhatsApp notification to owner
+  notifyOwnerSupportTicket(ticket).catch((err) =>
+    console.error('WhatsApp support ticket notification error:', err)
+  );
 
   return res.status(201).json({
     success: true,

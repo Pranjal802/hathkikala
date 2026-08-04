@@ -1,6 +1,7 @@
 import type { Request, Response } from 'express';
 import CustomizationRequest from '../models/CustomizationRequest.js';
 import { AppError } from '../utils/AppError.js';
+import { notifyOwnerCustomizationRequest } from '../services/whatsappService.js';
 
 // GET /api/customization-requests/my - Customer get all customization requests
 export async function getMyCustomizationRequests(req: Request, res: Response) {
@@ -50,5 +51,34 @@ export async function updateCustomizationAdmin(req: Request, res: Response) {
     success: true,
     message: 'Customization request updated',
     data: { customizationRequest: reqItem }
+  });
+}
+
+// POST /api/customization-requests - Create a new customization request
+export async function createCustomizationRequest(req: Request, res: Response) {
+  const { customerName, customerPhone, productName, requirements, orderId, notes } = req.body;
+
+  const created = await CustomizationRequest.create({
+    ...(req.user?._id ? { userId: req.user._id as any } : {}),
+    ...(orderId ? { orderId } : {}),
+    customerName: customerName || req.user?.name || 'Customer',
+    customerPhone: customerPhone || req.user?.phone,
+    productName: productName || 'Handcrafted Custom Item',
+    requirements: requirements || notes || 'Custom size / color specifications',
+    status: 'pending',
+  } as any);
+
+  // Trigger WhatsApp notification to owner
+  notifyOwnerCustomizationRequest({
+    customerName: (created as any).customerName || customerName,
+    customerPhone: (created as any).customerPhone || customerPhone,
+    productName: (created as any).productName || productName,
+    requirements: (created as any).requirements || requirements || notes,
+  }).catch((err) => console.error('WhatsApp customization notify error:', err));
+
+  return res.status(201).json({
+    success: true,
+    message: 'Customization request submitted successfully',
+    data: { customizationRequest: created },
   });
 }

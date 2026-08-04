@@ -1,18 +1,21 @@
 import { Router } from 'express';
 import {
+  createCustomizationRequest,
   getMyCustomizationRequests,
   getCustomizationByOrder,
   updateCustomizationAdmin,
 } from '../controllers/CustomizationRequestController.js';
-import { protect } from '../middleware/protect.js';
+import { protect, optionalProtect } from '../middleware/protect.js';
 import { restrictTo } from '../middleware/restrictTo.js';
 
 const router = Router();
 
-router.use(protect);
+// Public / Guest & Authenticated Customization Request Creation
+router.post('/', optionalProtect, createCustomizationRequest);
 
-router.get('/my', getMyCustomizationRequests);
-router.get('/order/:orderId', getCustomizationByOrder);
-router.post('/admin/:id/update', restrictTo('admin'), updateCustomizationAdmin);
+// Protected routes
+router.get('/my', protect, getMyCustomizationRequests);
+router.get('/order/:orderId', protect, getCustomizationByOrder);
+router.post('/admin/:id/update', protect, restrictTo('admin'), updateCustomizationAdmin);
 
 export default router;

@@ -7,6 +7,7 @@ import { AppError } from '../utils/AppError.js';
 import { toOrderResponse } from '../utils/toOrderResponse.js';
 import type { CreateOrderDto } from '../dtos/OrderDtos.js';
 import { sendOrderConfirmationEmail, sendShippingUpdateEmail } from '../services/emailService.js';
+import { notifyOwnerNewOrder } from '../services/whatsappService.js';
 
 // POST /api/orders - Support both authenticated user & guest checkout
 export async function createOrder(req: Request, res: Response) {
@@ -184,6 +185,9 @@ export async function createOrder(req: Request, res: Response) {
     const formattedOrder = toOrderResponse(createdOrder);
     sendOrderConfirmationEmail(req.user?.email || guestEmailVal, formattedOrder).catch((err) =>
       console.error('Order confirmation email error:', err)
+    );
+    notifyOwnerNewOrder(formattedOrder).catch((err) =>
+      console.error('WhatsApp order notification error:', err)
     );
 
     return res.status(201).json({ success: true, data: { order: formattedOrder } });
