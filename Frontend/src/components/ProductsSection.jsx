@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
-import { Heart, ShoppingCart, Star, Sparkles, Eye } from "lucide-react";
+import { Heart, ShoppingCart, Star, Sparkles, Eye, ArrowRight, Flame } from "lucide-react";
+import { Link } from "react-router-dom";
 import { useStore } from "../context/StoreContext.jsx";
 import { resolveImageUrl, handleImageError } from "../utils/resolveImageUrl.js";
 
@@ -15,6 +16,14 @@ export default function ProductsSection() {
     setSelectedCategory,
     fetchProducts,
   } = useStore();
+
+  // Filter ONLY most selling / best-seller products for the homepage
+  const bestSellingProducts = products.filter(
+    (p) => p.isBestSeller || p.isTrending || (p.badge && /best|top|popular|hot|trending|selling/i.test(p.badge))
+  );
+
+  // Fallback to top 6 products if no items are explicitly tagged as bestseller
+  const displayProducts = bestSellingProducts.length > 0 ? bestSellingProducts.slice(0, 8) : products.slice(0, 6);
 
   return (
     <section
@@ -34,14 +43,14 @@ export default function ProductsSection() {
           viewport={{ once: true }}
           className="text-center mb-16"
         >
-          <span className="inline-flex items-center gap-2 text-sm tracking-[5px] uppercase text-[#6B8E7F] mb-4 font-medium">
-            <Sparkles size={14} className="text-[#6B8E7F]" />
-            Featured Handmade Creations
+          <span className="inline-flex items-center gap-2 text-xs tracking-[4px] uppercase text-[#6B8E7F] mb-4 font-bold bg-[#E8F0EC] px-4 py-1.5 rounded-full border border-[#D4E2DC]">
+            <Flame size={15} className="text-amber-500 fill-amber-500 animate-pulse" />
+            Most Selling Creations
           </span>
 
           <h2 className="font-serif text-4xl sm:text-5xl lg:text-6xl text-[#3A3A3A] mb-4 leading-tight">
-            Crafted With Love & <br />
-            <span className="text-[#7A9B8C]">Artisanal Magic</span>
+            Our Top Selling & <br />
+            <span className="text-[#7A9B8C]">Most Loved Products</span>
           </h2>
 
           <div className="w-24 h-1 bg-[#7A9B8C] mx-auto rounded-full mb-6"></div>
@@ -64,7 +73,7 @@ export default function ProductsSection() {
           )}
 
           <p className="text-[#5A5A5A] max-w-2xl mx-auto text-base sm:text-lg leading-relaxed font-light">
-            Every item is hand-stitched, molded, or woven with premium non-toxic materials. Complete your order today with fast delivery across India.
+            Handcrafted favorites loved most by our customers across India. Discover our highest-rated artisanal bestsellers below.
           </p>
         </motion.div>
 
@@ -80,14 +89,14 @@ export default function ProductsSection() {
               </div>
             ))}
           </div>
-        ) : products.length === 0 ? (
+        ) : displayProducts.length === 0 ? (
           <div className="text-center py-16">
-            <p className="text-xl font-bold text-gray-700">No products found in this selection.</p>
+            <p className="text-xl font-bold text-gray-700">No best-selling products found.</p>
           </div>
         ) : (
           /* Product Grid */
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            {products.map((product, i) => (
+            {displayProducts.map((product, i) => (
               <motion.div
                 key={product.id}
                 initial={{ opacity: 0, y: 25 }}
@@ -213,6 +222,17 @@ export default function ProductsSection() {
             ))}
           </div>
         )}
+
+        {/* Explore Full Shop CTA */}
+        <div className="mt-16 text-center">
+          <Link
+            to="/shop"
+            className="inline-flex items-center gap-3 px-8 py-4 bg-[#3E2C23] hover:bg-[#C97C5D] text-white font-bold rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-0.5"
+          >
+            <span>Explore All Products & Catalog</span>
+            <ArrowRight size={18} />
+          </Link>
+        </div>
       </div>
     </section>
   );
