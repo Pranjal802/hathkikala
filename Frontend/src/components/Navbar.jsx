@@ -7,6 +7,7 @@ import {
   X,
   Search,
   ShoppingCart,
+  Heart,
   User,
   PackageCheck,
   LogOut,
@@ -50,6 +51,7 @@ export default function Navbar() {
     user,
     logout,
     cartCount,
+    wishlist,
     setCartOpen,
     setSearchOpen,
     setLoginOpen,
@@ -114,6 +116,21 @@ export default function Navbar() {
           >
             <Search size={19} />
           </button>
+
+          {/* Wishlist Link */}
+          <Link
+            to="/wishlist"
+            aria-label="Wishlist"
+            className="relative flex h-10 w-10 items-center justify-center rounded-full text-[#6B8E7F] transition-all duration-300 hover:bg-[#E8DDD0] hover:scale-105"
+            title="My Wishlist"
+          >
+            <Heart size={19} className={(wishlist?.length || 0) > 0 ? "fill-[#C97C5D] text-[#C97C5D]" : ""} />
+            {(wishlist?.length || 0) > 0 && (
+              <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-[#C97C5D] text-[10px] font-bold text-white ring-2 ring-[#F5F1E8]">
+                {wishlist.length}
+              </span>
+            )}
+          </Link>
 
           {/* Cart Trigger */}
           <button
