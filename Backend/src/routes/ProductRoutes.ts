@@ -29,6 +29,9 @@ import { upload } from '../middleware/upload.js';
 //   ...admin routes below
 const router = Router();
 
+// Admin only (Declare before parameterized /products/:slug route)
+router.get('/products/admin/all', protect, restrictTo('admin'), validateQuery(productAdminListQuerySchema), listProductsAdmin);
+
 // Public
 router.get('/products', listAllProductsPublic);
 router.get(
@@ -37,9 +40,6 @@ router.get(
   listProductsByCategory
 );
 router.get('/products/:slug', getProductBySlug);
-
-// Admin only
-router.get('/products/admin/all', protect, restrictTo('admin'), validateQuery(productAdminListQuerySchema), listProductsAdmin);
 router.get('/products/:id/admin', protect, restrictTo('admin'), getProductByIdAdmin);
 router.post('/products', protect, restrictTo('admin'), validate(createProductSchema), createProduct);
 router.patch('/products/:id', protect, restrictTo('admin'), validate(updateProductSchema), updateProduct);

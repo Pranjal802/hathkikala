@@ -14,6 +14,11 @@ async function request(endpoint, options = {}) {
     'Content-Type': 'application/json',
   };
 
+  const storedToken = typeof window !== 'undefined' ? (localStorage.getItem('token') || sessionStorage.getItem('token')) : null;
+  if (storedToken) {
+    defaultHeaders['Authorization'] = `Bearer ${storedToken}`;
+  }
+
   // Do not set Content-Type if sending FormData (image upload)
   if (options.body instanceof FormData) {
     delete defaultHeaders['Content-Type'];
