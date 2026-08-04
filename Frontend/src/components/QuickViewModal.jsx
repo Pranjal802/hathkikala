@@ -86,15 +86,20 @@ export default function QuickViewModal() {
                       {product.name}
                     </h2>
 
-                    {/* Price */}
-                    <div className="flex items-baseline gap-3 mb-3">
+                    {/* Price & Discount Badge */}
+                    <div className="flex items-center gap-2.5 mb-3 flex-wrap">
                       <span className="font-sans text-3xl font-extrabold text-[#C97C5D]">
                         ₹{currentPrice}
                       </span>
                       {product.discountPrice && (
-                        <span className="font-sans text-base text-[#5C4033]/40 line-through">
-                          ₹{product.basePrice}
-                        </span>
+                        <>
+                          <span className="font-sans text-base text-[#5C4033]/40 line-through">
+                            ₹{product.basePrice}
+                          </span>
+                          <span className="px-2 py-0.5 bg-emerald-100 text-emerald-800 text-[11px] font-extrabold rounded-full border border-emerald-200">
+                            {Math.round(((product.basePrice - product.discountPrice) / product.basePrice) * 100)}% OFF
+                          </span>
+                        </>
                       )}
                     </div>
 

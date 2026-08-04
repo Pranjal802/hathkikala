@@ -166,14 +166,19 @@ export default function ProductsSection() {
 
                   <div>
                     {/* Price */}
-                    <div className="mb-5 flex items-baseline gap-2">
+                    <div className="mb-5 flex items-center gap-2 flex-wrap">
                       <span className="text-2xl font-extrabold text-[#C97C5D]">
                         ₹{product.discountPrice || product.basePrice}
                       </span>
                       {product.discountPrice && (
-                        <span className="text-sm text-gray-400 line-through">
-                          ₹{product.basePrice}
-                        </span>
+                        <>
+                          <span className="text-sm text-gray-400 line-through">
+                            ₹{product.basePrice}
+                          </span>
+                          <span className="px-2 py-0.5 bg-emerald-100 text-emerald-800 text-[11px] font-extrabold rounded-full border border-emerald-200">
+                            {Math.round(((product.basePrice - product.discountPrice) / product.basePrice) * 100)}% OFF
+                          </span>
+                        </>
                       )}
                     </div>
 

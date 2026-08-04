@@ -360,14 +360,19 @@ export default function ProductsPage() {
                         </div>
 
                         <div className="flex items-center justify-between gap-2 pt-1">
-                          <div className="flex items-baseline gap-1.5">
+                          <div className="flex items-center gap-1.5 flex-wrap">
                             <span className="font-sans text-xl font-extrabold text-[#C97C5D]">
                               ₹{prod.discountPrice || prod.basePrice}
                             </span>
                             {prod.discountPrice && (
-                              <span className="font-sans text-xs text-gray-400 line-through">
-                                ₹{prod.basePrice}
-                              </span>
+                              <>
+                                <span className="font-sans text-xs text-gray-400 line-through">
+                                  ₹{prod.basePrice}
+                                </span>
+                                <span className="px-2 py-0.5 bg-emerald-100 text-emerald-800 text-[10px] font-extrabold rounded-full border border-emerald-200">
+                                  {Math.round(((prod.basePrice - prod.discountPrice) / prod.basePrice) * 100)}% OFF
+                                </span>
+                              </>
                             )}
                           </div>
 
@@ -430,8 +435,20 @@ export default function ProductsPage() {
                     </div>
 
                     <div className="text-right shrink-0 space-y-3">
-                      <div className="font-sans text-2xl font-extrabold text-[#C97C5D]">
-                        ₹{prod.discountPrice || prod.basePrice}
+                      <div className="flex items-center gap-2 justify-end flex-wrap">
+                        <span className="font-sans text-2xl font-extrabold text-[#C97C5D]">
+                          ₹{prod.discountPrice || prod.basePrice}
+                        </span>
+                        {prod.discountPrice && (
+                          <>
+                            <span className="font-sans text-xs text-gray-400 line-through">
+                              ₹{prod.basePrice}
+                            </span>
+                            <span className="px-2 py-0.5 bg-emerald-100 text-emerald-800 text-[10px] font-extrabold rounded-full border border-emerald-200">
+                              {Math.round(((prod.basePrice - prod.discountPrice) / prod.basePrice) * 100)}% OFF
+                            </span>
+                          </>
+                        )}
                       </div>
                       <div className="flex items-center gap-2">
                         <button

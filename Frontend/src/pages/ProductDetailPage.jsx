@@ -150,15 +150,20 @@ export default function ProductDetailPage() {
                 </span>
               </div>
 
-              {/* Pricing */}
-              <div className="flex items-baseline gap-3">
+              {/* Pricing & Discount Badge */}
+              <div className="flex items-center gap-3 flex-wrap">
                 <span className="font-sans text-4xl font-extrabold text-[#C97C5D]">
                   ₹{currentPrice}
                 </span>
                 {product.discountPrice && (
-                  <span className="font-sans text-lg text-gray-400 line-through">
-                    ₹{product.basePrice}
-                  </span>
+                  <>
+                    <span className="font-sans text-lg text-gray-400 line-through">
+                      ₹{product.basePrice}
+                    </span>
+                    <span className="px-3 py-1 bg-emerald-100 text-emerald-800 text-xs font-extrabold rounded-full border border-emerald-200 shadow-sm">
+                      {Math.round(((product.basePrice - product.discountPrice) / product.basePrice) * 100)}% OFF
+                    </span>
+                  </>
                 )}
               </div>
 
