@@ -220,7 +220,17 @@ export const api = {
   getReviews: () => request('/admin/reviews'),
   updateReview: (id, data) => request(`/admin/reviews/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
   getSupportTickets: () => request('/admin/support'),
+  submitSupportTicket: (data) =>
+    request('/admin/support', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
   updateSupportTicket: (id, data) => request(`/admin/support/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  createCustomizationRequest: (data) =>
+    request('/customization-requests', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
   // Cloudinary & Image Upload APIs
   uploadPaymentProof: (formData) =>
     request('/upload/proof', {
