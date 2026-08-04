@@ -501,7 +501,7 @@ export async function getOrderStatsAdmin(req: Request, res: Response) {
       { $match: { status: { $ne: 'cancelled' } } },
       { $group: { _id: null, total: { $sum: '$totalAmount' } } },
     ]),
-    Product.find({ 'variants.stockQty': { $lte: 5 } }),
+    Product.find({ isActive: true, 'variants.stockQty': { $lte: 5 } }),
   ]);
 
   const totalRevenue = revenueResult[0]?.total || 0;
@@ -517,7 +517,7 @@ export async function getOrderStatsAdmin(req: Request, res: Response) {
       lowStockItems: lowStockProducts.map((p) => ({
         id: p._id.toString(),
         name: p.name,
-        stockQty: p.variants.reduce((sum, v) => sum + v.stockQty, 0),
+        stockQty: p.variants ? p.variants.reduce((sum, v) => sum + (v.isActive !== false ? v.stockQty : 0), 0) : 0,
       })),
     },
   });
