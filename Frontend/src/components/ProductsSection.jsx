@@ -226,7 +226,7 @@ export default function ProductsSection() {
         {/* Explore Full Shop CTA */}
         <div className="mt-16 text-center">
           <Link
-            to="/shop"
+            to="/products"
             className="inline-flex items-center gap-3 px-8 py-4 bg-[#3E2C23] hover:bg-[#C97C5D] text-white font-bold rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-0.5"
           >
             <span>Explore All Products & Catalog</span>
