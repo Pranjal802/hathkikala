@@ -315,8 +315,11 @@ export default function AdminPanel() {
         });
       }
 
+      const sellingPrice = productForm.discountPrice ? Number(productForm.discountPrice) : Number(productForm.basePrice);
+      const originalStrikethroughPrice = productForm.basePrice ? Number(productForm.basePrice) : sellingPrice;
+
       const generatedVariants = generateVariantsFromOptions(
-        productForm.basePrice,
+        sellingPrice,
         productForm.stockQty,
         productForm.name,
         productForm.colorOptions,
@@ -327,7 +330,8 @@ export default function AdminPanel() {
       await api.createProduct({
         name: productForm.name,
         categoryId: productForm.categoryId || categories[0]?.id,
-        basePrice: Number(productForm.basePrice),
+        basePrice: originalStrikethroughPrice,
+        discountPrice: sellingPrice,
         description: productForm.description,
         isCustomizable: productForm.isCustomizable,
         productionTimeDays: Number(productForm.productionTimeDays),
@@ -436,10 +440,13 @@ export default function AdminPanel() {
     e.preventDefault();
     if (!editingProduct) return;
     try {
+      const sellingPrice = editingProduct.discountPrice ? Number(editingProduct.discountPrice) : Number(editingProduct.basePrice);
+      const originalStrikethroughPrice = editingProduct.basePrice ? Number(editingProduct.basePrice) : sellingPrice;
+
       let updatedVariants = undefined;
       if (editingProduct.colorOptions !== undefined || editingProduct.sizeOptions !== undefined || editingProduct.setOptions !== undefined) {
         updatedVariants = generateVariantsFromOptions(
-          editingProduct.basePrice,
+          sellingPrice,
           editingProduct.stockQty,
           editingProduct.name,
           editingProduct.colorOptions !== undefined ? editingProduct.colorOptions : (editingProduct.variants?.map(v => v.attributes?.color || v.attributes?.get?.('color')).filter(Boolean).join(',') || ''),
@@ -451,7 +458,8 @@ export default function AdminPanel() {
       await api.updateProduct(editingProduct.id, {
         name: editingProduct.name,
         categoryId: editingProduct.categoryId,
-        basePrice: Number(editingProduct.basePrice),
+        basePrice: originalStrikethroughPrice,
+        discountPrice: sellingPrice,
         description: editingProduct.description,
         ...(updatedVariants ? { variants: updatedVariants } : {}),
         images: (editingProduct.images || []).map((img, i) => ({
@@ -464,7 +472,7 @@ export default function AdminPanel() {
 
       if (!updatedVariants && editingProduct.variants?.[0]?.id) {
         await api.updateVariant(editingProduct.id, editingProduct.variants[0].id, {
-          price: Number(editingProduct.discountPrice || editingProduct.basePrice),
+          price: sellingPrice,
           stockQty: Number(editingProduct.stockQty),
         });
       }
@@ -2156,24 +2164,44 @@ export default function AdminPanel() {
                 ))}
               </select>
 
-              <div className="grid grid-cols-2 gap-3">
-                <input
-                  type="number"
-                  placeholder="Price in INR (₹)"
-                  value={productForm.basePrice}
-                  onChange={(e) => setProductForm({ ...productForm, basePrice: e.target.value })}
-                  required
-                  className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium"
-                />
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 bg-rose-50/50 p-3 rounded-2xl border border-rose-100">
+                <div>
+                  <label className="block text-[11px] font-bold text-gray-700 mb-1">Selling Price (₹)*</label>
+                  <input
+                    type="number"
+                    placeholder="1199"
+                    value={productForm.discountPrice}
+                    onChange={(e) => setProductForm({ ...productForm, discountPrice: e.target.value })}
+                    required
+                    className="w-full px-3 py-1.5 bg-white border border-gray-200 rounded-xl text-xs font-bold text-[#C97C5D]"
+                  />
+                  <span className="text-[9px] text-gray-400 block mt-0.5">Offer price paid by customer</span>
+                </div>
 
-                <input
-                  type="number"
-                  placeholder="Initial Stock Quantity"
-                  value={productForm.stockQty}
-                  onChange={(e) => setProductForm({ ...productForm, stockQty: e.target.value })}
-                  required
-                  className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium"
-                />
+                <div>
+                  <label className="block text-[11px] font-bold text-gray-700 mb-1">Strikethrough MRP (₹)</label>
+                  <input
+                    type="number"
+                    placeholder="1499"
+                    value={productForm.basePrice}
+                    onChange={(e) => setProductForm({ ...productForm, basePrice: e.target.value })}
+                    className="w-full px-3 py-1.5 bg-white border border-gray-200 rounded-xl text-xs font-bold text-gray-500 line-through"
+                  />
+                  <span className="text-[9px] text-gray-400 block mt-0.5">Original price crossed out</span>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-gray-700 mb-1">Stock Qty*</label>
+                  <input
+                    type="number"
+                    placeholder="10"
+                    value={productForm.stockQty}
+                    onChange={(e) => setProductForm({ ...productForm, stockQty: e.target.value })}
+                    required
+                    className="w-full px-3 py-1.5 bg-white border border-gray-200 rounded-xl text-xs font-bold"
+                  />
+                  <span className="text-[9px] text-gray-400 block mt-0.5">Total units available</span>
+                </div>
               </div>
 
               <textarea
@@ -2323,27 +2351,43 @@ export default function AdminPanel() {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 bg-rose-50/50 p-3 rounded-2xl border border-rose-100">
                 <div>
-                  <label className="block text-xs font-bold text-gray-600 mb-1">Price (₹)</label>
+                  <label className="block text-[11px] font-bold text-gray-700 mb-1">Selling Price (₹)*</label>
                   <input
                     type="number"
-                    value={editingProduct.basePrice}
-                    onChange={(e) => setEditingProduct({ ...editingProduct, basePrice: e.target.value })}
+                    placeholder="1199"
+                    value={editingProduct.discountPrice !== undefined ? editingProduct.discountPrice : (editingProduct.basePrice || '')}
+                    onChange={(e) => setEditingProduct({ ...editingProduct, discountPrice: e.target.value })}
                     required
-                    className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium"
+                    className="w-full px-3 py-1.5 bg-white border border-gray-200 rounded-xl text-xs font-bold text-[#C97C5D]"
                   />
+                  <span className="text-[9px] text-gray-400 block mt-0.5">Offer price paid by customer</span>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-gray-600 mb-1">Stock Quantity</label>
+                  <label className="block text-[11px] font-bold text-gray-700 mb-1">Strikethrough MRP (₹)</label>
                   <input
                     type="number"
-                    value={editingProduct.stockQty}
+                    placeholder="1499"
+                    value={editingProduct.basePrice || ''}
+                    onChange={(e) => setEditingProduct({ ...editingProduct, basePrice: e.target.value })}
+                    className="w-full px-3 py-1.5 bg-white border border-gray-200 rounded-xl text-xs font-bold text-gray-500 line-through"
+                  />
+                  <span className="text-[9px] text-gray-400 block mt-0.5">Original price crossed out</span>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-gray-700 mb-1">Stock Qty*</label>
+                  <input
+                    type="number"
+                    placeholder="10"
+                    value={editingProduct.stockQty !== undefined ? editingProduct.stockQty : ''}
                     onChange={(e) => setEditingProduct({ ...editingProduct, stockQty: e.target.value })}
                     required
-                    className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium"
+                    className="w-full px-3 py-1.5 bg-white border border-gray-200 rounded-xl text-xs font-bold"
                   />
+                  <span className="text-[9px] text-gray-400 block mt-0.5">Total units available</span>
                 </div>
               </div>
 

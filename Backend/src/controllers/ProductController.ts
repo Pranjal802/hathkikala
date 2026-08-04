@@ -223,6 +223,7 @@ export async function createProduct(req: Request, res: Response) {
     isCustomizable: body.isCustomizable,
     variants: body.variants,
     images: normalizedImages,
+    ...(body.discountPrice !== undefined ? { discountPrice: body.discountPrice } : {}),
     ...(body.description !== undefined ? { description: body.description } : {}),
     ...(body.productionTimeDays !== undefined ? { productionTimeDays: body.productionTimeDays } : {}),
   });
@@ -258,6 +259,7 @@ export async function updateProduct(req: Request, res: Response) {
   }
   if (body.description !== undefined) product.description = body.description;
   if (body.basePrice !== undefined) product.basePrice = body.basePrice;
+  if (body.discountPrice !== undefined) product.discountPrice = body.discountPrice;
   if (body.isCustomizable !== undefined) product.isCustomizable = body.isCustomizable;
   if (body.productionTimeDays !== undefined) product.productionTimeDays = body.productionTimeDays;
   if (body.isActive !== undefined) product.isActive = body.isActive;
